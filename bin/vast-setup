@@ -21,7 +21,7 @@ env >> /etc/environment
 if ! command -v uv &> /dev/null; then
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    source $HOME/.cargo/env
+    export PATH="$HOME/.local/bin:$PATH"
 fi
 
 mkdir -p "$WORKSPACE"
@@ -35,9 +35,6 @@ cd "$REPO_NAME"
 
 echo "Running uv sync..."
 uv sync
-
-# Install Cursor extensions
-install-cursor-extensions
 
 echo "Setup complete! You're now in $WORKSPACE/$REPO_NAME"
 

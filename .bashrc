@@ -7,5 +7,5 @@ source ~/dotfiles/aliases.sh
 source ~/dotfiles/auth.sh
 
 # Add bin to PATH
-export PATH="$HOME/dotfiles/bin:$PATH"
+export PATH="$HOME/dotfiles/bin:$HOME/.local/bin:$PATH"
 
