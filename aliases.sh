@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # Editor
 alias code="open -a Cursor"

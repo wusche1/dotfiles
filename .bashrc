@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # Source aliases
 source ~/dotfiles/aliases.sh

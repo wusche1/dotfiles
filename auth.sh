@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # GitHub authentication
 if [ -n "$GITHUB_TOKEN" ]; then

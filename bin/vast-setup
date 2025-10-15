@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 if [ -z "$1" ]; then
     echo "Usage: vast-setup <repo-url>"
@@ -11,8 +11,8 @@ WORKSPACE="$HOME/workspace"
 
 # Setup dotfiles
 echo "Setting up dotfiles..."
-ln -sf ~/dotfiles/.zshrc ~/.zshrc
-source ~/.zshrc
+ln -sf ~/dotfiles/.bashrc ~/.bashrc
+source ~/.bashrc
 
 # Persist environment variables
 env >> /etc/environment
