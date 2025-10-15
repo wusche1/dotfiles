@@ -9,6 +9,14 @@ REPO_URL=$1
 REPO_NAME=$(basename "$REPO_URL" .git)
 WORKSPACE="$HOME/workspace"
 
+# Setup dotfiles
+echo "Setting up dotfiles..."
+ln -sf ~/dotfiles/.zshrc ~/.zshrc
+source ~/.zshrc
+
+# Persist environment variables
+env >> /etc/environment
+
 # Install uv if not present
 if ! command -v uv &> /dev/null; then
     echo "Installing uv..."
