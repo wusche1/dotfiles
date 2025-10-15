@@ -36,5 +36,8 @@ cd "$REPO_NAME"
 echo "Running uv sync..."
 uv sync
 
+# Install Cursor extensions
+install-cursor-extensions
+
 echo "Setup complete! You're now in $WORKSPACE/$REPO_NAME"
 
