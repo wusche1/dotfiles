@@ -36,8 +36,10 @@ cd "$REPO_NAME"
 echo "Running uv sync..."
 uv sync
 
-# Install Cursor extensions
-install-cursor-extensions
+# Setup Cursor workspace
+echo "Configuring Cursor extensions..."
+mkdir -p .vscode
+cp ~/dotfiles/tasks.json .vscode/tasks.json
 
 echo "Setup complete! You're now in $WORKSPACE/$REPO_NAME"
 
