@@ -1,4 +1,5 @@
 # Add Cursor extension IDs here, one per line
 ms-python.python
 charliermarsh.ruff
+ms-toolsai.jupyter
 
