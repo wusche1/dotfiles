@@ -33,13 +33,13 @@ git clone "$REPO_URL"
 echo "Setting up $REPO_NAME..."
 cd "$REPO_NAME"
 
-echo "Running uv sync..."
-uv sync
-
 # Setup Cursor workspace
 echo "Configuring Cursor extensions..."
 mkdir -p .vscode
 cp ~/dotfiles/tasks.json .vscode/tasks.json
+
+echo "Running uv sync..."
+uv sync
 
 echo "Setup complete! You're now in $WORKSPACE/$REPO_NAME"
 
