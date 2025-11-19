@@ -15,9 +15,8 @@ if [ -d "$WORKSPACES_DIR" ]; then
         if [ -d "$folder" ]; then
             folder_name=$(basename "$folder")
             target_path="$TARGET_DIR/.${folder_name}"
-            [ -L "$target_path" ] && rm "$target_path"
-            [ -d "$target_path" ] && rm -rf "$target_path"
-            ln -s "$folder" "$target_path"
+            mkdir -p "$target_path"
+            cp -r "$folder/"* "$target_path/"
         fi
     done
 fi
