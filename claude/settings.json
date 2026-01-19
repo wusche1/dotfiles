@@ -6,8 +6,10 @@
       "WebSearch"
     ],
     "deny": [
-      "Bash(ls:*.env*)",
-      "Bash(ls:*/.env*)"
+      "Read(~/.secrets/*)",
+      "Read(*/secrets/*.env)",
+      "Bash(cat ~/.secrets/*)",
+      "Bash(cat */secrets/*.env)"
     ]
   }
 }
