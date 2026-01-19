@@ -3,6 +3,11 @@
     "claudeCode.selectedModel": "opus",
     "claudeCode.useTerminal": true,
     "remote.SSH.permitPtyAllocation": true,
+    "remote.SSH.defaultExtensions": [
+        "anthropic.claude-code",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+    ],
     "explorer.confirmDelete": false,
     "workbench.editor.empty.hint": "hidden",
     "security.workspace.trust.banner": "never",
