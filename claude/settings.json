@@ -1,0 +1,13 @@
+{
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(ls:*.env*)",
+      "Bash(ls:*/.env*)"
+    ]
+  }
+}
