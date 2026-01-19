@@ -12,15 +12,10 @@ fi
 
 # Get repo info
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-REPO_NAME="$(basename "$REPO_ROOT")"
 PARENT_DIR="$(dirname "$REPO_ROOT")"
-WORKTREES_DIR="${PARENT_DIR}/${REPO_NAME}_worktrees"
-WORKTREE_PATH="${WORKTREES_DIR}/${BRANCH_NAME}"
+WORKTREE_PATH="${PARENT_DIR}/${BRANCH_NAME}"
 
-# Create worktrees directory if needed
-mkdir -p "$WORKTREES_DIR"
-
-# Create the branch and worktree
+# Create the branch and worktree as sibling
 git branch "$BRANCH_NAME" "$SOURCE_BRANCH" 2>/dev/null || true
 git worktree add "$WORKTREE_PATH" "$BRANCH_NAME"
 
