@@ -112,17 +112,16 @@ remote() {
     scp -P "$port" -i "$identity" "$identity" "$user_host:~/.ssh/id_ed25519"
     ssh -p "$port" -i "$identity" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
 
-    # Run setup script on remote (installs dependencies)
+    # Setup dotfiles and run setup script on remote
     echo "Setting up remote environment..."
-    scp -P "$port" -i "$identity" ~/dotfiles/scripts/setup-remote.sh "$user_host:/tmp/setup-remote.sh"
-    ssh -p "$port" -i "$identity" "$user_host" "chmod +x /tmp/setup-remote.sh && /tmp/setup-remote.sh"
-
-    # Setup dotfiles on remote if not present
     ssh -p "$port" -i "$identity" "$user_host" '
-        if [ ! -f ~/dotfiles/install.sh ]; then
+        if [ ! -d ~/dotfiles ]; then
             git clone https://github.com/wusche1/dotfiles.git ~/dotfiles
+        else
+            cd ~/dotfiles && git pull
         fi
-        cd ~/dotfiles && git pull && ./install.sh
+        ~/dotfiles/scripts/setup-remote.sh
+        cd ~/dotfiles && ./install.sh
     '
 
     # Create/update SSH config entry
