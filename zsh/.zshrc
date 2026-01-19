@@ -147,3 +147,5 @@ EOF
     echo "Opening VS Code to $final_path..."
     code --remote ssh-remote+$config_name "$final_path"
 }
+
+. "$HOME/.local/bin/env"
