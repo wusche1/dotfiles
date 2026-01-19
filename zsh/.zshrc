@@ -27,3 +27,10 @@ export CLAUDE_ENV_FILE=~/.secrets/claude.env
 
 # Personal config
 export WANDB_ENTITY="wuschelschulz8"
+
+# Symlink dotfiles into current project for easy editing
+symhere() {
+    ln -sf ~/dotfiles/claude .claude
+    ln -sf ~/.secrets .secrets
+    echo "Linked .claude and .secrets"
+}
