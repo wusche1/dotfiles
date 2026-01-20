@@ -2,6 +2,9 @@
     "claudeCode.preferredLocation": "panel",
     "claudeCode.selectedModel": "opus",
     "claudeCode.useTerminal": true,
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "terminal.integrated.defaultProfile.linux": "zsh",
     "remote.SSH.permitPtyAllocation": true,
     "remote.SSH.defaultExtensions": [
         "anthropic.claude-code",
