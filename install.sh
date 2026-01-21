@@ -41,6 +41,10 @@ else
     VSCODE_DIR="$HOME/.config/Code/User"
 fi
 link "$DOTFILES_DIR/vscode/settings.json" "$VSCODE_DIR/settings.json"
+# vscode-server (for remote SSH connections)
+if [ -d "$HOME/.vscode-server/data/User" ]; then
+    link "$DOTFILES_DIR/vscode/settings.json" "$HOME/.vscode-server/data/User/settings.json"
+fi
 
 # secrets
 if ls "$DOTFILES_DIR/secrets"/*.env.age 1>/dev/null 2>&1; then
