@@ -149,3 +149,11 @@ EOF
 }
 
 . "$HOME/.local/bin/env"
+
+# Run python script with nohup, auto-naming output from config
+run() {
+    local config="$1"
+    local name=$(basename "$config" .yaml)
+    nohup python main.py -c "$config" > "${name}.out" 2>&1 &
+    echo "Started PID $! → ${name}.out"
+}
