@@ -22,8 +22,8 @@ link() {
 
 echo "Installing dotfiles..."
 
-# symlink repo to ~/dotfiles
-link "$DOTFILES_DIR" "$HOME/dotfiles"
+# symlink repo to ~/dotfiles (skip if already there)
+[[ "$DOTFILES_DIR" != "$HOME/dotfiles" ]] && link "$DOTFILES_DIR" "$HOME/dotfiles"
 
 # zsh
 link "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
