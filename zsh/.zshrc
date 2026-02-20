@@ -13,6 +13,10 @@ alias gpl="git pull"
 alias gd="git diff"
 alias gl="git log --oneline --graph"
 
+# Claude Code
+alias cc="claude"
+alias ccdsp="claude --dangerously-skip-permissions"
+
 # Navigation
 alias ..="cd .."
 alias ...="cd ../.."
