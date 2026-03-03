@@ -1,3 +1,6 @@
+# Sourced only for interactive shells
+# Environment variables and PATH are in .zshenv
+
 # Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
@@ -17,20 +20,13 @@ alias gl="git log --oneline --graph"
 alias cc="claude"
 alias ccdsp="claude --dangerously-skip-permissions"
 
+# Tmux
+alias tmux="TERM=xterm-256color tmux"
+
 # Navigation
 alias ..="cd .."
 alias ...="cd ../.."
 alias ll="ls -lah"
-
-# Direnv
-eval "$(direnv hook zsh)"
-
-# Secrets
-[ -f ~/.secrets/personal.env ] && source ~/.secrets/personal.env
-export CLAUDE_ENV_FILE=~/.secrets/claude.env
-
-# Personal config
-export WANDB_ENTITY="wuschelschulz8"
 
 # Symlink dotfiles into current project for easy editing
 symhere() {
@@ -151,8 +147,6 @@ EOF
     echo "Opening VS Code to $final_path..."
     code --remote ssh-remote+$config_name "$final_path"
 }
-
-. "$HOME/.local/bin/env"
 
 # Run python script with nohup, auto-naming output from config
 run() {

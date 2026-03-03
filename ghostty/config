@@ -1,0 +1,38 @@
+font-family = "Menlo"
+theme = "Kanagawa Wave"
+background-opacity = 0.85
+background-blur = true
+font-size = 14
+
+# Navigate splits with Opt+h/j/k/l (no prefix needed!)
+keybind = opt+h=goto_split:left
+keybind = opt+j=goto_split:bottom
+keybind = opt+k=goto_split:top
+keybind = opt+l=goto_split:right
+
+# Create new splits with Opt+Shift+h/j/k/l
+keybind = opt+shift+h=new_split:left
+keybind = opt+shift+j=new_split:down
+keybind = opt+shift+k=new_split:up
+keybind = opt+shift+l=new_split:right
+
+# Escape key shortcuts
+keybind = ctrl+left_bracket=text:\x1b
+keybind = shift+enter=text:\x1b\r
+
+# macOS Option key as Alt
+macos-option-as-alt = true
+keybind = alt+up=esc:[1;3A
+keybind = alt+down=esc:[1;3B
+keybind = alt+left=esc:[1;3D
+keybind = alt+right=esc:[1;3C
+
+# Hide mouse while typing
+mouse-hide-while-typing = true
+
+# macOS titlebar
+macos-titlebar-proxy-icon = hidden
+title = " "
+
+# Custom cursor shader for cool animations
+custom-shader = shaders/cursor.glsl

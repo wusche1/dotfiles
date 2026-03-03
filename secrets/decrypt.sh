@@ -1,11 +1,12 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Decrypts secrets from this directory into ~/.secrets/
 # Called by install.sh or run manually
 
 set -e
+setopt null_glob  # Don't error on empty globs
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SSH_KEY="$HOME/.ssh/id_ed25519"
 
 if [ ! -f "$SSH_KEY" ]; then

@@ -24,5 +24,6 @@
     "chat.agent.enabled": false,
     "github.copilot.enable": {
         "*": false
-    }
+    },
+    "terminal.integrated.initialHint": false
 }

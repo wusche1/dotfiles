@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 set -e
 
@@ -26,10 +26,23 @@ echo "Installing dotfiles..."
 [[ "$DOTFILES_DIR" != "$HOME/dotfiles" ]] && link "$DOTFILES_DIR" "$HOME/dotfiles"
 
 # zsh
+link "$DOTFILES_DIR/zsh/.zshenv" "$HOME/.zshenv"
 link "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
 
 # git
 link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
+
+# tmux
+link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
+
+# ghostty
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    GHOSTTY_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
+else
+    GHOSTTY_DIR="$HOME/.config/ghostty"
+fi
+link "$DOTFILES_DIR/ghostty/config" "$GHOSTTY_DIR/config"
+link "$DOTFILES_DIR/ghostty/shaders" "$GHOSTTY_DIR/shaders"
 
 # claude
 link "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
