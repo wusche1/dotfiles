@@ -124,28 +124,10 @@ remote() {
         cd ~/dotfiles && ./install.sh
     '
 
-    # Create/update SSH config entry
-    local config_name="remote-dev"
-    local host=$(echo "$user_host" | cut -d'@' -f2)
-    local user=$(echo "$user_host" | cut -d'@' -f1)
-
-    # Remove old config entry and add new one
-    if [[ -f ~/.ssh/config ]]; then
-        awk '/^Host remote-dev$/{skip=1; next} /^Host /{skip=0} !skip' ~/.ssh/config > ~/.ssh/config.tmp
-        mv ~/.ssh/config.tmp ~/.ssh/config
-    fi
-
-    cat >> ~/.ssh/config << EOF
-
-Host $config_name
-    HostName $host
-    User $user
-    Port $port
-    IdentityFile $identity
-EOF
-
-    echo "Opening VS Code to $final_path..."
-    code --remote ssh-remote+$config_name "$final_path"
+    # SSH into remote and start/attach tmux session
+    local session_name=$(basename "$final_path" | tr '.' '_' | tr '-' '_')
+    echo "Connecting to $final_path (tmux session: $session_name)..."
+    ssh -p "$port" -i "$identity" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
 }
 
 # Run python script with nohup, auto-naming output from config
