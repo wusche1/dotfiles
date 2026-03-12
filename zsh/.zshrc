@@ -137,3 +137,4 @@ run() {
     nohup python main.py -c "$config" > "${name}.out" 2>&1 &
     echo "Started PID $! → ${name}.out"
 }
+export PATH="/opt/homebrew/bin:$PATH"
