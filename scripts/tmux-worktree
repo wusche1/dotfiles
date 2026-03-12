@@ -1,0 +1,8 @@
+#!/bin/bash
+name="$1"
+cwd="$2"
+root=$(git -C "$cwd" worktree list --porcelain | head -1 | sed 's/^worktree //')
+worktree_dir="${root}_worktree"
+mkdir -p "$worktree_dir"
+git -C "$root" worktree add "$worktree_dir/$name" -b "$name"
+tmux new-window -n "$name" -c "$worktree_dir/$name"

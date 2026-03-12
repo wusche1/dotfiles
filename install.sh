@@ -2,7 +2,7 @@
 
 set -e
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$(dirname "${0}")" && pwd)"
 
 link() {
     local src="$1"
@@ -35,6 +35,9 @@ link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
 # tmux
 link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
+# nvim
+link "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+
 # ghostty
 if [[ "$OSTYPE" == "darwin"* ]]; then
     GHOSTTY_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
@@ -61,6 +64,10 @@ link "$DOTFILES_DIR/vscode/settings.json" "$VSCODE_DIR/settings.json"
 if [ -d "$HOME/.vscode-server/data/User" ]; then
     link "$DOTFILES_DIR/vscode/settings.json" "$HOME/.vscode-server/data/User/settings.json"
 fi
+
+# scripts
+mkdir -p "$HOME/.local/bin"
+link "$DOTFILES_DIR/scripts/tmux-worktree" "$HOME/.local/bin/tmux-worktree"
 
 # secrets
 if ls "$DOTFILES_DIR/secrets"/*.env.age 1>/dev/null 2>&1; then
