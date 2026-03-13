@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 echo '=== Checking environment ==='
 
 # age (for secrets decryption)
