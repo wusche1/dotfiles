@@ -103,4 +103,5 @@ if [ ! -f ~/.terminfo/x/xterm-ghostty ]; then
     rm -f /tmp/xterm-ghostty.terminfo
 fi
 
+
 echo '=== Environment ready ==='

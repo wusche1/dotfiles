@@ -18,7 +18,7 @@ alias gl="git log --oneline --graph"
 
 # Claude Code
 alias cc="claude"
-alias ccdsp="claude --dangerously-skip-permissions"
+alias ccdsp="claude --allowedTools 'Bash,Glob,Grep,Read,Edit,Write,NotebookEdit,WebFetch,WebSearch,Task,TaskOutput,TaskStop,TodoWrite,AskUserQuestion,EnterPlanMode,ExitPlanMode,Skill'"
 
 # Tmux
 alias tmux="TERM=xterm-256color tmux"
