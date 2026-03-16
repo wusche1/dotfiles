@@ -5,7 +5,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "",
+      colorscheme = "tokyonight",
     }
   },
   { "hrsh7th/nvim-cmp", enabled = false },

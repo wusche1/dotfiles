@@ -8,4 +8,4 @@
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 vim.api.nvim_create_autocmd("FileType", { pattern = "*", callback = function() vim.opt_local.spell = false end })
 vim.api.nvim_create_autocmd("FileType", { pattern = "tex", callback = function() vim.opt_local.wrap = true vim.opt_local.linebreak = true end })
-vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, { command = "checktime" })
+vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave", "BufEnter", "CursorHold", "CursorHoldI" }, { command = "checktime" })

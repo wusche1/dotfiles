@@ -86,12 +86,16 @@ if ! command -v nvim > /dev/null || ! nvim --version 2>/dev/null | grep -q "v0.1
     fi
 fi
 
-# LazyVim config
-if [ ! -d ~/.config/nvim ]; then
-    echo 'Installing LazyVim...'
-    git clone https://github.com/LazyVim/starter ~/.config/nvim
-    rm -rf ~/.config/nvim/.git
-fi
+# C compiler (required for nvim-treesitter parser compilation)
+command -v gcc > /dev/null || {
+    echo 'Installing build-essential for treesitter...'
+    apt-get update && apt-get install -y build-essential
+}
+
+# LazyVim bootstrap: nuke stale plugin cache and sync fresh
+echo 'Syncing LazyVim plugins...'
+rm -rf ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy ~/.cache/nvim
+nvim --headless "+Lazy! sync" +qa 2>/dev/null
 
 # Ghostty terminfo (for Ghostty terminal support)
 if [ ! -f ~/.terminfo/x/xterm-ghostty ]; then
