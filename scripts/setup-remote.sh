@@ -43,7 +43,7 @@ command -v npm > /dev/null || {
 # Claude Code CLI
 command -v claude > /dev/null || {
     echo 'Installing Claude Code...'
-    npm install -g @anthropic-ai/claude-code
+    curl -fsSL https://cli.claude.ai/install.sh | sh
 }
 
 # tmux
