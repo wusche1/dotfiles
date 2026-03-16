@@ -11,4 +11,5 @@ return {
   { "hrsh7th/nvim-cmp", enabled = false },
   
   { "saghen/blink.cmp", enabled = false },
+  { "sindrets/diffview.nvim", cmd = { "DiffviewOpen", "DiffviewFileHistory", "DiffviewClose" } },
 }

@@ -10,6 +10,14 @@ command -v age > /dev/null || {
     rm -rf /tmp/age /tmp/age.tar.gz
 }
 
+# git (need 2.31+ for diffview.nvim)
+if ! git --version 2>/dev/null | grep -qE 'git version (2\.(3[1-9]|[4-9][0-9])|[3-9]\.)'; then
+    echo 'Upgrading git...'
+    apt-get update && apt-get install -y software-properties-common
+    add-apt-repository ppa:git-core/ppa -y
+    apt-get update && apt-get install -y git
+fi
+
 # direnv
 command -v direnv > /dev/null || {
     echo 'Installing direnv...'
