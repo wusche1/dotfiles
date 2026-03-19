@@ -1,0 +1,9 @@
+#!/bin/sh
+current=$(tmux display-message -p '#S')
+tmux list-sessions -F '#S' | while read -r s; do
+  if [ "$s" = "$current" ]; then
+    printf '#[fg=#1F1F28,bg=#957FB8,bold] %s #[default]' "$s"
+  else
+    printf ' #[fg=#957FB8]%s#[default] ' "$s"
+  fi
+done

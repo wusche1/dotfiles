@@ -68,6 +68,7 @@ fi
 # scripts
 mkdir -p "$HOME/.local/bin"
 link "$DOTFILES_DIR/scripts/tmux-worktree" "$HOME/.local/bin/tmux-worktree"
+link "$DOTFILES_DIR/scripts/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
 
 # secrets
 if ls "$DOTFILES_DIR/secrets"/*.env.age 1>/dev/null 2>&1; then

@@ -58,10 +58,12 @@ remote() {
         return 1
     fi
 
+    local ssh_opts=(-p "$port" -i "$identity" -o ServerAliveInterval=60 -o ServerAliveCountMax=3)
+
     echo "Connecting to $user_host:$port..."
 
     # Get folders in /workspace/
-    local folder_list=$(ssh -p "$port" -i "$identity" "$user_host" "ls -d /workspace/*/ 2>/dev/null | xargs -n1 basename")
+    local folder_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/*/ 2>/dev/null | xargs -n1 basename")
     local -a folders
     folders=("${(f)folder_list}")
 
@@ -87,7 +89,7 @@ remote() {
 
     # Check if it's a worktree folder (contains "worktree" in name)
     if [[ "$chosen_folder" == *worktree* ]]; then
-        local branch_list=$(ssh -p "$port" -i "$identity" "$user_host" "ls -d /workspace/$chosen_folder/*/ 2>/dev/null | xargs -n1 basename")
+        local branch_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/$chosen_folder/*/ 2>/dev/null | xargs -n1 basename")
         local -a branches
         branches=("${(f)branch_list}")
 
@@ -108,13 +110,13 @@ remote() {
     fi
 
     # Copy SSH key for decrypting secrets (needed for dotfiles setup)
-    ssh -p "$port" -i "$identity" "$user_host" "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    ssh "${ssh_opts[@]}" "$user_host" "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
     scp -P "$port" -i "$identity" "$identity" "$user_host:~/.ssh/id_ed25519"
-    ssh -p "$port" -i "$identity" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
+    ssh "${ssh_opts[@]}" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
 
     # Setup dotfiles and run setup script on remote
     echo "Setting up remote environment..."
-    ssh -p "$port" -i "$identity" "$user_host" '
+    ssh "${ssh_opts[@]}" "$user_host" '
         if [ ! -d ~/dotfiles ]; then
             git clone https://github.com/wusche1/dotfiles.git ~/dotfiles
         else
@@ -127,7 +129,7 @@ remote() {
     # SSH into remote and start/attach tmux session
     local session_name=$(basename "$final_path" | tr '.' '_' | tr '-' '_')
     echo "Connecting to $final_path (tmux session: $session_name)..."
-    ssh -p "$port" -i "$identity" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
+    ssh "${ssh_opts[@]}" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
 }
 
 # Run python script with nohup, auto-naming output from config
