@@ -140,3 +140,16 @@ run() {
     echo "Started PID $! → ${name}.out"
 }
 export PATH="/opt/homebrew/bin:$PATH"
+
+# Auto-activate .venv: check cwd first, then walk up to find one
+activate_venv() {
+    local dir="$PWD"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/.venv/bin/activate" ]]; then
+            source "$dir/.venv/bin/activate"
+            return
+        fi
+        dir="$(dirname "$dir")"
+    done
+}
+activate_venv

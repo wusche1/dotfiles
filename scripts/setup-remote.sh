@@ -54,11 +54,15 @@ command -v claude > /dev/null || {
     curl -fsSL https://cli.claude.ai/install.sh | sh
 }
 
-# tmux
-command -v tmux > /dev/null || {
-    echo 'Installing tmux...'
-    apt-get update && apt-get install -y tmux
-}
+# tmux (need 3.3+ for allow-passthrough and pane-border-lines)
+if ! tmux -V 2>/dev/null | awk '{if ($2 >= 3.3) exit 0; else exit 1}'; then
+    echo 'Installing tmux 3.5a from source...'
+    apt-get update && apt-get install -y libevent-dev ncurses-dev build-essential bison
+    curl -Lo /tmp/tmux.tar.gz https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz
+    cd /tmp && tar xzf tmux.tar.gz && cd tmux-3.5a
+    ./configure && make -j$(nproc) && make install
+    cd /tmp && rm -rf tmux-3.5a tmux.tar.gz
+fi
 
 # neovim (smart install - try prebuilt, build from source if needed)
 if ! command -v nvim > /dev/null || ! nvim --version 2>/dev/null | grep -q "v0.11"; then
