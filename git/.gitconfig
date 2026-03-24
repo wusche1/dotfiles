@@ -2,4 +2,4 @@
 	name = Julian Schulz
 	email = wuschelschulz8@gmail.com
 [credential]
-	helper = store
+	helper = osxkeychain
