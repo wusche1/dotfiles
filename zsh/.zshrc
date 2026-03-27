@@ -136,13 +136,14 @@ remote() {
 run() {
     local config="$1"
     local name=$(basename "$config" .yaml)
-    nohup python main.py -c "$config" > "${name}.out" 2>&1 &
+    nohup uv run python main.py -c "$config" > "${name}.out" 2>&1 &
     echo "Started PID $! → ${name}.out"
 }
 export PATH="/opt/homebrew/bin:$PATH"
 
 # Auto-activate .venv: check cwd first, then walk up to find one
 activate_venv() {
+    [[ -n "$VIRTUAL_ENV" ]] && return
     local dir="$PWD"
     while [[ "$dir" != "/" ]]; do
         if [[ -f "$dir/.venv/bin/activate" ]]; then

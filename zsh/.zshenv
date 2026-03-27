@@ -1,8 +1,8 @@
 # Sourced by ALL zsh invocations (interactive and non-interactive)
 # Keep this minimal - only PATH and essential environment variables
 
-# Homebrew
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Homebrew (macOS only)
+[[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Secrets
 [ -f ~/.secrets/personal.env ] && source ~/.secrets/personal.env
