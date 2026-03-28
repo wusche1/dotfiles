@@ -1,9 +1,11 @@
 #!/bin/sh
 current=$(tmux display-message -p '#S')
+n=1
 tmux list-sessions -F '#S' | while read -r s; do
   if [ "$s" = "$current" ]; then
-    printf '#[fg=#1F1F28,bg=#957FB8,bold] %s #[default]' "$s"
+    printf '#[fg=#1F1F28,bg=#957FB8,bold] %s %s #[default]' "$n" "$s"
   else
-    printf ' #[fg=#957FB8]%s#[default] ' "$s"
+    printf ' #[fg=#957FB8]%s %s#[default] ' "$n" "$s"
   fi
+  n=$((n + 1))
 done

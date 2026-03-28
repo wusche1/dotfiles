@@ -69,6 +69,7 @@ fi
 mkdir -p "$HOME/.local/bin"
 link "$DOTFILES_DIR/scripts/tmux-worktree" "$HOME/.local/bin/tmux-worktree"
 link "$DOTFILES_DIR/scripts/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
+link "$DOTFILES_DIR/scripts/tmux-bind-sessions" "$HOME/.local/bin/tmux-bind-sessions"
 
 # clipboard unwrap (macOS only)
 if [[ "$(uname)" == "Darwin" ]]; then

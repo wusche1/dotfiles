@@ -1,0 +1,8 @@
+#!/bin/sh
+# Rebind session table keys to direct switch-client with immediate status refresh
+n=0
+tmux list-sessions -F '#{session_name}' | while read -r s; do
+  n=$((n + 1))
+  [ "$n" -le 9 ] && tmux bind -T session "$n" "switch-client -t '$s' ; refresh-client -S"
+done
+tmux switch-client -T session
