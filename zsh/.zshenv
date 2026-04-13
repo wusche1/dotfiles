@@ -10,6 +10,8 @@ export CLAUDE_ENV_FILE=~/.secrets/claude.env
 
 # Personal config
 export WANDB_ENTITY="wuschelschulz8"
+export EDITOR=nvim
+export VISUAL=nvim
 
 # Direnv
 eval "$(direnv hook zsh)"

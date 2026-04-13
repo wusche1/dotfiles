@@ -68,44 +68,43 @@ remote() {
     folders=("${(f)folder_list}")
 
     if [[ -z "$folder_list" ]]; then
-        echo "No folders found in /workspace/"
-        return 1
-    fi
-
-    local chosen_folder=""
-    if [[ ${#folders[@]} -eq 1 ]]; then
-        chosen_folder="${folders[1]}"
-        echo "Found: $chosen_folder"
+        local final_path="/workspace"
     else
-        echo "Select folder:"
-        for i in {1..${#folders[@]}}; do
-            echo "  $i) ${folders[$i]}"
-        done
-        read "choice?Enter number: "
-        chosen_folder="${folders[$choice]}"
-    fi
-
-    local final_path="/workspace/$chosen_folder"
-
-    # Check if it's a worktree folder (contains "worktree" in name)
-    if [[ "$chosen_folder" == *worktree* ]]; then
-        local branch_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/$chosen_folder/*/ 2>/dev/null | xargs -n1 basename")
-        local -a branches
-        branches=("${(f)branch_list}")
-
-        if [[ -z "$branch_list" ]]; then
-            echo "No branches found in $chosen_folder"
-            return 1
-        elif [[ ${#branches[@]} -eq 1 ]]; then
-            final_path="/workspace/$chosen_folder/${branches[1]}"
-            echo "Found branch: ${branches[1]}"
+        local chosen_folder=""
+        if [[ ${#folders[@]} -eq 1 ]]; then
+            chosen_folder="${folders[1]}"
+            echo "Found: $chosen_folder"
         else
-            echo "Select branch:"
-            for i in {1..${#branches[@]}}; do
-                echo "  $i) ${branches[$i]}"
+            echo "Select folder:"
+            for i in {1..${#folders[@]}}; do
+                echo "  $i) ${folders[$i]}"
             done
             read "choice?Enter number: "
-            final_path="/workspace/$chosen_folder/${branches[$choice]}"
+            chosen_folder="${folders[$choice]}"
+        fi
+
+        local final_path="/workspace/$chosen_folder"
+
+        # Check if it's a worktree folder (contains "worktree" in name)
+        if [[ "$chosen_folder" == *worktree* ]]; then
+            local branch_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/$chosen_folder/*/ 2>/dev/null | xargs -n1 basename")
+            local -a branches
+            branches=("${(f)branch_list}")
+
+            if [[ -z "$branch_list" ]]; then
+                echo "No branches found in $chosen_folder"
+                return 1
+            elif [[ ${#branches[@]} -eq 1 ]]; then
+                final_path="/workspace/$chosen_folder/${branches[1]}"
+                echo "Found branch: ${branches[1]}"
+            else
+                echo "Select branch:"
+                for i in {1..${#branches[@]}}; do
+                    echo "  $i) ${branches[$i]}"
+                done
+                read "choice?Enter number: "
+                final_path="/workspace/$chosen_folder/${branches[$choice]}"
+            fi
         fi
     fi
 
