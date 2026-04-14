@@ -71,14 +71,6 @@ link "$DOTFILES_DIR/scripts/tmux-worktree" "$HOME/.local/bin/tmux-worktree"
 link "$DOTFILES_DIR/scripts/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
 link "$DOTFILES_DIR/scripts/tmux-bind-sessions" "$HOME/.local/bin/tmux-bind-sessions"
 
-# clipboard unwrap (macOS only)
-if [[ "$(uname)" == "Darwin" ]]; then
-    swiftc -O -o "$HOME/.local/bin/clipboard-unwrap" "$DOTFILES_DIR/scripts/clipboard-unwrap.swift"
-    cp "$DOTFILES_DIR/scripts/com.dotfiles.clipboard-unwrap.plist" "$HOME/Library/LaunchAgents/"
-    launchctl bootout gui/$(id -u) "$HOME/Library/LaunchAgents/com.dotfiles.clipboard-unwrap.plist" 2>/dev/null
-    launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.dotfiles.clipboard-unwrap.plist"
-fi
-
 # secrets
 if ls "$DOTFILES_DIR/secrets"/*.env.age 1>/dev/null 2>&1; then
     echo "Decrypting secrets..."
