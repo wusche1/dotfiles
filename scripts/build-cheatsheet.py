@@ -44,14 +44,14 @@ HTML = f"""<!doctype html>
 body{{margin:0;background:var(--bg);color:var(--fg);
 font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:2.5rem 1.25rem}}
 .wrap{{max-width:1100px;margin:0 auto}}
-.prefix-badge{{position:fixed;top:1rem;right:1rem;z-index:10;display:flex;flex-direction:column;
-align-items:center;gap:.35rem;background:var(--panel);border:4px solid #E82424;border-radius:12px;
-padding:.7rem 1rem;box-shadow:0 4px 18px rgba(0,0,0,.5)}}
+.prefix-badge{{flex:none;display:flex;flex-direction:column;align-items:center;gap:.35rem;
+background:var(--panel);border:4px solid #E82424;border-radius:12px;padding:.7rem 1rem}}
 .prefix-badge .label{{font-size:.62rem;letter-spacing:.18em;color:#E82424;font-weight:700}}
 .prefix-badge kbd{{font-size:1.05rem;border-color:#E82424;color:var(--fg);padding:.25rem .6rem}}
 .hero{{grid-column:1/-1;margin-top:1.75rem;border-color:var(--accent)}}
 .hero h2{{color:var(--accent)}}
-header{{margin-bottom:2rem;padding-right:9rem}}
+header{{margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}}
+.head-text{{flex:1;min-width:min(100%,18rem)}}
 h1{{margin:0;font-size:1.9rem;color:var(--fg)}}
 .sub{{color:var(--muted);margin:.3rem 0 0}}
 .updated{{color:var(--dim);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}}
@@ -75,10 +75,13 @@ footer{{color:var(--dim);font-size:.8rem;margin-top:2rem;text-align:center}}
 footer a{{color:var(--blue)}}
 @page{{size:A4 portrait;margin:7mm}}
 @media print{{
-.prefix-badge{{display:none}}footer{{display:none}}
+footer{{display:none}}
 body{{background:#fff;color:#000;padding:0;font-size:8.5px;line-height:1.22}}
 .wrap{{max-width:none}}
-header{{padding-right:0;margin-bottom:.3rem}}
+header{{margin-bottom:.3rem;gap:.6rem}}
+.prefix-badge{{border-width:2px;padding:.25rem .5rem;gap:.15rem}}
+.prefix-badge .label{{font-size:.5rem}}
+.prefix-badge kbd{{font-size:.72rem;padding:.05rem .3rem}}
 h1{{font-size:1.1rem}}.updated{{font-size:.55rem}}
 .sub{{font-size:.7rem;margin:.1rem 0 0}}
 .intro{{font-size:.7rem;margin:.2rem 0 0;max-width:none;color:#222}}
@@ -97,12 +100,14 @@ code{{background:#f0f0f0;color:#000;border-color:#ccc}}
 </head>
 <body>
 <div class=wrap>
-<div class=prefix-badge><span class=label>PREFIX</span><kbd>Ctrl+Space</kbd></div>
 <header>
+<div class=head-text>
 <div class=updated>{html.escape(data.get("updated",""))}</div>
 <h1>{html.escape(data["title"])}</h1>
 <p class=sub>{html.escape(data.get("subtitle",""))}</p>
 <p class=intro>{data.get("intro","")}</p>
+</div>
+<div class=prefix-badge><span class=label>PREFIX</span><kbd>Ctrl+Space</kbd></div>
 </header>
 {hero}
 <div class=grid>{cards}</div>

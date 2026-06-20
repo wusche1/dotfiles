@@ -11,14 +11,14 @@
 body{margin:0;background:var(--bg);color:var(--fg);
 font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:2.5rem 1.25rem}
 .wrap{max-width:1100px;margin:0 auto}
-.prefix-badge{position:fixed;top:1rem;right:1rem;z-index:10;display:flex;flex-direction:column;
-align-items:center;gap:.35rem;background:var(--panel);border:4px solid #E82424;border-radius:12px;
-padding:.7rem 1rem;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.prefix-badge{flex:none;display:flex;flex-direction:column;align-items:center;gap:.35rem;
+background:var(--panel);border:4px solid #E82424;border-radius:12px;padding:.7rem 1rem}
 .prefix-badge .label{font-size:.62rem;letter-spacing:.18em;color:#E82424;font-weight:700}
 .prefix-badge kbd{font-size:1.05rem;border-color:#E82424;color:var(--fg);padding:.25rem .6rem}
 .hero{grid-column:1/-1;margin-top:1.75rem;border-color:var(--accent)}
 .hero h2{color:var(--accent)}
-header{margin-bottom:2rem;padding-right:9rem}
+header{margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem;flex-wrap:wrap}
+.head-text{flex:1;min-width:min(100%,18rem)}
 h1{margin:0;font-size:1.9rem;color:var(--fg)}
 .sub{color:var(--muted);margin:.3rem 0 0}
 .updated{color:var(--dim);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}
@@ -42,10 +42,13 @@ footer{color:var(--dim);font-size:.8rem;margin-top:2rem;text-align:center}
 footer a{color:var(--blue)}
 @page{size:A4 portrait;margin:7mm}
 @media print{
-.prefix-badge{display:none}footer{display:none}
+footer{display:none}
 body{background:#fff;color:#000;padding:0;font-size:8.5px;line-height:1.22}
 .wrap{max-width:none}
-header{padding-right:0;margin-bottom:.3rem}
+header{margin-bottom:.3rem;gap:.6rem}
+.prefix-badge{border-width:2px;padding:.25rem .5rem;gap:.15rem}
+.prefix-badge .label{font-size:.5rem}
+.prefix-badge kbd{font-size:.72rem;padding:.05rem .3rem}
 h1{font-size:1.1rem}.updated{font-size:.55rem}
 .sub{font-size:.7rem;margin:.1rem 0 0}
 .intro{font-size:.7rem;margin:.2rem 0 0;max-width:none;color:#222}
@@ -64,13 +67,15 @@ code{background:#f0f0f0;color:#000;border-color:#ccc}
 </head>
 <body>
 <div class=wrap>
-<div class=prefix-badge><span class=label>PREFIX</span><kbd>Ctrl+Space</kbd></div>
 <header>
+<div class=head-text>
 <div class=updated>JUN 2026</div>
 <h1>tmux + Claude Code</h1>
 <p class=sub>A take-home guide for running terminal coding sessions</p>
 <p class=intro>tmux keeps your work alive in the background. Close the terminal, sleep the laptop, or drop an SSH connection — your session (and Claude) keeps running. You just reattach. Almost every command is the prefix <b>Ctrl+Space</b> (press and release), then a key.
 </p>
+</div>
+<div class=prefix-badge><span class=label>PREFIX</span><kbd>Ctrl+Space</kbd></div>
 </header>
 <section class="hero"><h2>The mental model</h2><p>tmux nests three layers. Give each one a job and you always know where things live.</p><p><b>Session = project.</b> One per repo. The session is the container that stays alive when you detach and walk away.</p><p><b>Window = branch.</b> Inside a project, one window per branch / git worktree. Claude can refactor on one branch while another sits untouched in the next window.</p><p><b>Pane = agent vs. your eyes.</b> Split a window so the agent works in one pane while you watch the code, run tests, or read a diff in the other.</p><p>In one line: <b>session = which project, window = which branch, pane = agent vs. your view of the code.</b></p></section>
 <div class=grid><section class=""><h2>Survival keys</h2><p class="note">If you remember nothing else, remember these.</p><table><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>d</kbd></td><td>Detach — leave everything running and walk away</td></tr><tr><td class=keys><kbd>tmux attach</kbd></td><td>Reattach to your running sessions</td></tr><tr><td class=keys><kbd>tmux ls</kbd></td><td>List what is currently running</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>[</kbd></td><td>Scroll up to read history — arrows to move, q to quit</td></tr></table></section><section class=""><h2>Windows = branches</h2><p class="note">Like tabs. One per branch / worktree. The bottom bar is your branch list.</p><table><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>W</kbd></td><td>Create a git worktree + window for a new branch in one step</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>c</kbd></td><td>New window (same branch)</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>n / p</kbd></td><td>Next / previous window</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>1 2 3</kbd></td><td>Jump to window by number</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>,</kbd></td><td>Rename the current window</td></tr><tr><td class=keys><kbd>exit</kbd></td><td>Close a window (just exit its last shell)</td></tr></table></section><section class=""><h2>Panes = code + agents</h2><p class="note">Split the screen so the agent and your view of the code sit side by side.</p><table><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>v</kbd></td><td>Split left/right (e.g. Claude left, terminal right)</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>s</kbd></td><td>Split top/bottom</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>h j k l</kbd></td><td>Move between panes (vim directions)</td></tr><tr><td class=keys><kbd>exit</kbd></td><td>Close a pane</td></tr></table></section><section class=""><h2>Sessions = projects</h2><p class="note">One per repo. Switching projects means switching sessions, not closing them.</p><table><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>S</kbd></td><td>New named session in ~/Projects</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>/</kbd></td><td>Quick-switch between sessions, then press a number</td></tr></table></section><section class=""><h2>Copy &amp; paste</h2><p class="note">Mouse selection often works too — this is the keyboard way.</p><table><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>[</kbd></td><td>Enter scroll/copy mode</td></tr><tr><td class=keys><kbd>v</kbd></td><td>Start selecting (then move with vim keys)</td></tr><tr><td class=keys><kbd>y</kbd></td><td>Copy selection and exit</td></tr><tr><td class=keys><kbd>Ctrl+Space</kbd><span class="then">then</span><kbd>]</kbd></td><td>Paste</td></tr></table></section><section class=""><h2>Gotchas</h2><p><b>F12</b> toggles tmux's keys off, for when you SSH into another tmux. If the prefix seems to stop working and you see <code>[OFF]</code> in the bottom-right, press <b>F12</b> to turn it back on.</p><p><b>Mouse is on:</b> click panes/windows to switch, drag borders to resize, scroll to read back.</p></section><section class=""><h2>A typical Claude Code session</h2><p>1. <code>tmux attach</code> — or start fresh by running <code>tmux</code></p><p>2. <b>Ctrl+Space S</b> → name the session after your project</p><p>3. Run <code>claude</code></p><p>4. Need a scratch terminal? <b>Ctrl+Space v</b></p><p>5. New task / branch? <b>Ctrl+Space W</b> spins up a worktree + window</p><p>6. Walking away? <b>Ctrl+Space d</b> — Claude keeps working</p><p>7. Back later? <code>tmux attach</code></p></section></div>
