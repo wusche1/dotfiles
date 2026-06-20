@@ -2,6 +2,31 @@
 
 Personal dotfiles managed with symlinks.
 
+## Setup
+
+Install the core tools — [Ghostty](https://ghostty.org/) (terminal), tmux, zsh, and neovim — then run the installer below.
+
+### macOS (Homebrew)
+
+```bash
+brew install --cask ghostty
+brew install tmux zsh neovim
+```
+
+### Linux (Debian/Ubuntu)
+
+```bash
+sudo apt update
+sudo apt install -y tmux zsh
+sudo snap install nvim --classic   # apt's neovim is usually too old for LazyVim
+```
+
+Ghostty isn't in apt — install it from the [official downloads](https://ghostty.org/download) (or your distro's package manager). On other distros, swap `apt` for your package manager (`dnf`, `pacman`, …).
+
+### Windows
+
+Not recommended — this setup targets macOS and Linux. If you must, use [WSL2](https://learn.microsoft.com/windows/wsl/) and follow the Linux steps inside it.
+
 ## Installation
 
 ```bash
