@@ -13,7 +13,7 @@ def kbd(keys):
     return '<span class="then">then</span>'.join(f"<kbd>{html.escape(k)}</kbd>" for k in keys)
 
 
-def card(s):
+def card(s, cls=""):
     body = ""
     if s.get("note"):
         body += f'<p class="note">{s["note"]}</p>'
@@ -25,10 +25,12 @@ def card(s):
             for r in s.get("rows", [])
         )
         body += f"<table>{rows}</table>"
-    return f'<section><h2>{s["name"]}</h2>{body}</section>'
+    return f'<section class="{cls}"><h2>{s["name"]}</h2>{body}</section>'
 
 
-cards = "".join(card(s) for s in data["sections"])
+HERO = "The mental model"
+hero = "".join(card(s, "hero") for s in data["sections"] if s["name"] == HERO)
+cards = "".join(card(s) for s in data["sections"] if s["name"] != HERO)
 HTML = f"""<!doctype html>
 <html lang=en>
 <head>
@@ -42,7 +44,14 @@ HTML = f"""<!doctype html>
 body{{margin:0;background:var(--bg);color:var(--fg);
 font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:2.5rem 1.25rem}}
 .wrap{{max-width:1100px;margin:0 auto}}
-header{{margin-bottom:2rem}}
+.prefix-badge{{position:fixed;top:1rem;right:1rem;z-index:10;display:flex;flex-direction:column;
+align-items:center;gap:.35rem;background:var(--panel);border:4px solid #E82424;border-radius:12px;
+padding:.7rem 1rem;box-shadow:0 4px 18px rgba(0,0,0,.5)}}
+.prefix-badge .label{{font-size:.62rem;letter-spacing:.18em;color:#E82424;font-weight:700}}
+.prefix-badge kbd{{font-size:1.05rem;border-color:#E82424;color:var(--fg);padding:.25rem .6rem}}
+.hero{{grid-column:1/-1;margin-top:1.75rem;border-color:var(--accent)}}
+.hero h2{{color:var(--accent)}}
+header{{margin-bottom:2rem;padding-right:9rem}}
 h1{{margin:0;font-size:1.9rem;color:var(--fg)}}
 .sub{{color:var(--muted);margin:.3rem 0 0}}
 .updated{{color:var(--dim);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}}
@@ -64,18 +73,20 @@ code{{font:.85em ui-monospace,Menlo,monospace;background:var(--bg);border:1px so
 border-radius:4px;padding:.05rem .35rem;color:var(--green)}}
 footer{{color:var(--dim);font-size:.8rem;margin-top:2rem;text-align:center}}
 footer a{{color:var(--blue)}}
-@media print{{body{{background:#fff;color:#111;padding:0}}section{{background:#fff;border-color:#ccc;break-inside:avoid}}
+@media print{{.prefix-badge{{display:none}}header{{padding-right:0}}body{{background:#fff;color:#111;padding:0}}section{{background:#fff;border-color:#ccc;break-inside:avoid}}
 h2{{color:#000}}kbd{{background:#f4f4f4;color:#000}}code{{background:#f4f4f4;color:#000}}.intro,.sub,.note,td:last-child{{color:#333}}}}
 </style>
 </head>
 <body>
 <div class=wrap>
+<div class=prefix-badge><span class=label>PREFIX</span><kbd>Ctrl+Space</kbd></div>
 <header>
 <div class=updated>{html.escape(data.get("updated",""))}</div>
 <h1>{html.escape(data["title"])}</h1>
 <p class=sub>{html.escape(data.get("subtitle",""))}</p>
 <p class=intro>{data.get("intro","")}</p>
 </header>
+{hero}
 <div class=grid>{cards}</div>
 <footer>Generated from <code>docs/cheatsheet.yaml</code> · tmux docs: <a href="https://github.com/tmux/tmux/wiki">tmux wiki</a> · Claude Code: <a href="https://code.claude.com/docs">code.claude.com/docs</a></footer>
 </div>
