@@ -1,6 +1,10 @@
 # Dotfiles
 
-Personal dotfiles managed with symlinks.
+A complete terminal setup tuned for one thing: running **many Claude Code sessions in parallel** without them tripping over each other. The terminal (Ghostty), multiplexer (tmux), editor (neovim), and shell (zsh) are configured to share one mental model — every project is a session, every feature is its own branch + worktree in its own window, and `hjkl` moves you everywhere.
+
+Everything is plain config files symlinked into place by `install.sh`. No frameworks, no stow, no nix — clone, run one script, done. The same setup bootstraps remote machines over SSH.
+
+> 📄 **New to this?** There's a printable [tmux + Claude Code cheat sheet](https://wusche1.github.io/dotfiles/) covering the day-to-day shortcuts.
 
 ## Setup
 
@@ -35,20 +39,34 @@ cd ~/dotfiles
 ./install.sh
 ```
 
-## Structure
+## How it's organized
+
+Each tool gets its own directory holding exactly the files that tool reads. `install.sh` symlinks them to where the tool expects them in `~`, so editing a file here (or in `~`) changes both.
 
 ```
 dotfiles/
-├── zsh/.zshrc           # Zsh configuration
-├── git/.gitconfig       # Git configuration
-├── claude/settings.json # Claude Code settings
-├── vscode/settings.json # VS Code settings
-└── install.sh           # Symlink installer
+├── install.sh        # Symlinks everything into place (backs up what it replaces)
+├── zsh/              # .zshrc (aliases, functions) + .zshenv (PATH, secrets, direnv)
+├── tmux/             # .tmux.conf — Kanagawa theme, C-Space prefix, F12 nested toggle
+├── ghostty/          # Terminal config — Kanagawa Wave, Opt+hjkl splits, cursor shader
+├── nvim/             # LazyVim-based neovim config
+├── git/              # .gitconfig
+├── claude/           # Claude Code: settings.json, rules/, skills/ → symlinked to ~/.claude
+├── vscode/           # VS Code settings
+├── scripts/          # tmux-worktree, setup-remote.sh, tmux session helpers, this README's cheat-sheet builder
+├── secrets/          # Age-encrypted env files (decrypted on install, never committed in plaintext)
+└── docs/             # The published cheat sheet (GitHub Pages)
 ```
+
+The pieces are wired to reinforce each other:
+
+- **Kanagawa theme** across Ghostty, tmux, and neovim, so every layer looks the same.
+- **`C-Space` (Ctrl+Space) is the tmux prefix** on both local and remote machines; `F12` toggles the local prefix off so it passes through to a remote tmux when you SSH in.
+- **Secrets are age-encrypted** in `secrets/` and decrypted by `install.sh` using your SSH key, so API keys land automatically on any machine.
 
 ## How it works
 
-The install script creates symlinks from your home directory to this repo. Any changes you make to the dotfiles (either in `~` or in this repo) will be reflected in both places.
+The install script creates symlinks from your home directory to this repo. Any changes you make to the dotfiles (either in `~` or in this repo) are reflected in both places.
 
 ## Workflow
 
