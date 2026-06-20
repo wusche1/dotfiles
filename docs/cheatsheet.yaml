@@ -1,0 +1,99 @@
+title: tmux + Claude Code
+subtitle: A take-home guide for running terminal coding sessions
+updated: JUN 2026
+intro: >
+  tmux keeps your work alive in the background. Close the terminal, sleep the
+  laptop, or drop an SSH connection — your session (and Claude) keeps running.
+  You just reattach. Almost every command is the prefix <b>Ctrl+Space</b>
+  (press and release), then a key.
+
+# Conceptual sections render as prose cards (use `text`: a list of paragraphs).
+# Reference sections render as key/description tables (use `rows`).
+# Edit this file and run scripts/build-cheatsheet.py to regenerate docs/index.html.
+
+sections:
+  - name: The mental model
+    kind: concept
+    text:
+      - "tmux nests three layers. Give each one a job and you always know where things live."
+      - "<b>Session = project.</b> One per repo. The session is the container that stays alive when you detach and walk away."
+      - "<b>Window = branch.</b> Inside a project, one window per branch / git worktree. Claude can refactor on one branch while another sits untouched in the next window."
+      - "<b>Pane = agent vs. your eyes.</b> Split a window so the agent works in one pane while you watch the code, run tests, or read a diff in the other."
+      - "In one line: <b>session = which project, window = which branch, pane = agent vs. your view of the code.</b>"
+
+  - name: Survival keys
+    note: If you remember nothing else, remember these.
+    rows:
+      - keys: ["Ctrl+Space", "d"]
+        desc: Detach — leave everything running and walk away
+      - keys: ["tmux attach"]
+        desc: Reattach to your running sessions
+      - keys: ["tmux ls"]
+        desc: List what is currently running
+      - keys: ["Ctrl+Space", "["]
+        desc: Scroll up to read history — arrows to move, q to quit
+
+  - name: Windows = branches
+    note: Like tabs. One per branch / worktree. The bottom bar is your branch list.
+    rows:
+      - keys: ["Ctrl+Space", "W"]
+        desc: Create a git worktree + window for a new branch in one step
+      - keys: ["Ctrl+Space", "c"]
+        desc: New window (same branch)
+      - keys: ["Ctrl+Space", "n / p"]
+        desc: Next / previous window
+      - keys: ["Ctrl+Space", "1 2 3"]
+        desc: Jump to window by number
+      - keys: ["Ctrl+Space", ","]
+        desc: Rename the current window
+      - keys: ["exit"]
+        desc: Close a window (just exit its last shell)
+
+  - name: Panes = code + agents
+    note: Split the screen so the agent and your view of the code sit side by side.
+    rows:
+      - keys: ["Ctrl+Space", "v"]
+        desc: Split left/right (e.g. Claude left, terminal right)
+      - keys: ["Ctrl+Space", "s"]
+        desc: Split top/bottom
+      - keys: ["Ctrl+Space", "h j k l"]
+        desc: Move between panes (vim directions)
+      - keys: ["exit"]
+        desc: Close a pane
+
+  - name: Sessions = projects
+    note: One per repo. Switching projects means switching sessions, not closing them.
+    rows:
+      - keys: ["Ctrl+Space", "S"]
+        desc: New named session in ~/Projects
+      - keys: ["Ctrl+Space", "/"]
+        desc: Quick-switch between sessions, then press a number
+
+  - name: Copy &amp; paste
+    note: Mouse selection often works too — this is the keyboard way.
+    rows:
+      - keys: ["Ctrl+Space", "["]
+        desc: Enter scroll/copy mode
+      - keys: ["v"]
+        desc: Start selecting (then move with vim keys)
+      - keys: ["y"]
+        desc: Copy selection and exit
+      - keys: ["Ctrl+Space", "]"]
+        desc: Paste
+
+  - name: Gotchas
+    kind: concept
+    text:
+      - "<b>F12</b> toggles tmux's keys off, for when you SSH into another tmux. If the prefix seems to stop working and you see <code>[OFF]</code> in the bottom-right, press <b>F12</b> to turn it back on."
+      - "<b>Mouse is on:</b> click panes/windows to switch, drag borders to resize, scroll to read back."
+
+  - name: A typical Claude Code session
+    kind: concept
+    text:
+      - "1. <code>tmux attach</code> — or start fresh by running <code>tmux</code>"
+      - "2. <b>Ctrl+Space S</b> → name the session after your project"
+      - "3. Run <code>claude</code>"
+      - "4. Need a scratch terminal? <b>Ctrl+Space v</b>"
+      - "5. New task / branch? <b>Ctrl+Space W</b> spins up a worktree + window"
+      - "6. Walking away? <b>Ctrl+Space d</b> — Claude keeps working"
+      - "7. Back later? <code>tmux attach</code>"
