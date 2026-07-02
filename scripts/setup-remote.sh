@@ -113,6 +113,12 @@ if ! command -v nvim > /dev/null || ! nvim --version 2>/dev/null | grep -q "v0.1
     fi
 fi
 
+# ripgrep (required for telescope live_grep / space-/)
+command -v rg > /dev/null || {
+    echo 'Installing ripgrep...'
+    apt-get update && apt-get install -y ripgrep
+}
+
 # C compiler (required for nvim-treesitter parser compilation)
 command -v gcc > /dev/null || {
     echo 'Installing build-essential for treesitter...'
