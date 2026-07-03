@@ -15,5 +15,7 @@
       "Bash(cat */secrets/*.env)"
     ]
   },
-  "skipDangerousModePermissionPrompt": true
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark"
 }

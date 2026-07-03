@@ -18,3 +18,4 @@ eval "$(direnv hook zsh)"
 
 # Environment
 . "$HOME/.local/bin/env"
+. "$HOME/.cargo/env"
