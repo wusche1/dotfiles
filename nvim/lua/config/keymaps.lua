@@ -3,7 +3,18 @@
 -- Add any additional keymaps here
 
 vim.keymap.set("n", "<leader>fy", function()
-  local path = vim.fn.expand("%")
+  local path
+  if vim.bo.filetype:find("^snacks") then
+    local pickers = Snacks.picker.get()
+    for _, picker in ipairs(pickers) do
+      local item = picker:current()
+      if item then
+        path = Snacks.picker.util.path(item)
+        if path then break end
+      end
+    end
+  end
+  path = vim.fn.fnamemodify(path or vim.fn.expand("%"), ":.")
   vim.fn.system({ "tmux", "set-buffer", path })
   vim.fn.setreg("+", path)
   vim.notify(path)
