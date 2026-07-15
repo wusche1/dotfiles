@@ -15,7 +15,7 @@ vim.keymap.set("n", "<leader>fy", function()
     end
   end
   path = vim.fn.fnamemodify(path or vim.fn.expand("%"), ":.")
-  vim.fn.system({ "tmux", "set-buffer", path })
+  require("vim.ui.clipboard.osc52").copy("+")({ path })
   vim.fn.setreg("+", path)
   vim.notify(path)
 end, { desc = "Copy relative path" })
