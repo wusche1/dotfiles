@@ -52,6 +52,7 @@ link "$DOTFILES_DIR/claude/settings.json" "$HOME/.claude/settings.json"
 link "$DOTFILES_DIR/claude/rules" "$HOME/.claude/rules"
 link "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
 link "$DOTFILES_DIR/claude/skills" "$HOME/.claude/skills"
+link "$DOTFILES_DIR/claude/clipboard-mcp.py" "$HOME/.claude/clipboard-mcp.py"
 
 # vscode
 if [[ "$OSTYPE" == "darwin"* ]]; then

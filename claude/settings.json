@@ -5,6 +5,7 @@
   "permissions": {
     "allow": [
       "Bash(ls:*)",
+      "mcp__clipboard__copy",
       "WebFetch",
       "WebSearch"
     ],
@@ -15,6 +16,7 @@
       "Bash(cat */secrets/*.env)"
     ]
   },
+  "model": "claude-fable-5[1m]",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark"
