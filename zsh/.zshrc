@@ -48,19 +48,25 @@ remote() {
             -p) port="$2"; shift 2 ;;
             -i) identity="$2"; shift 2 ;;
             ssh) shift ;;  # skip 'ssh' if included
-            *@*) user_host="$1"; shift ;;
-            *) shift ;;
+            *) user_host="$1"; shift ;;
         esac
     done
 
     if [[ -z "$user_host" ]]; then
-        echo "Usage: remote user@host [-p port] [-i identity_file]"
+        echo "Usage: remote user@host|ssh-alias [-p port] [-i identity_file]"
         return 1
     fi
 
-    local ssh_opts=(-p "$port" -i "$identity" -o ServerAliveInterval=60 -o ServerAliveCountMax=3)
+    # Bare alias (e.g. a SkyPilot cluster like "whitebox"): ~/.ssh/config supplies
+    # user/port/key — passing -p/-i here would override it and break the connection.
+    local ssh_opts=(-o ServerAliveInterval=60 -o ServerAliveCountMax=3)
+    local scp_opts=()
+    if [[ "$user_host" == *@* ]]; then
+        ssh_opts+=(-p "$port" -i "$identity")
+        scp_opts+=(-P "$port" -i "$identity")
+    fi
 
-    echo "Connecting to $user_host:$port..."
+    echo "Connecting to $user_host..."
 
     # Get folders in /workspace/
     local folder_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/*/ 2>/dev/null | xargs -n1 basename")
@@ -68,7 +74,8 @@ remote() {
     folders=("${(f)folder_list}")
 
     if [[ -z "$folder_list" ]]; then
-        local final_path="/workspace"
+        # No /workspace (e.g. SkyPilot pod): repo lives in ~/sky_workdir
+        local final_path=$(ssh "${ssh_opts[@]}" "$user_host" '[ -d "$HOME/sky_workdir" ] && echo "$HOME/sky_workdir" || echo /workspace')
     else
         local chosen_folder=""
         if [[ ${#folders[@]} -eq 1 ]]; then
@@ -110,7 +117,7 @@ remote() {
 
     # Copy SSH key for decrypting secrets (needed for dotfiles setup)
     ssh "${ssh_opts[@]}" "$user_host" "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-    scp -P "$port" -i "$identity" "$identity" "$user_host:~/.ssh/id_ed25519"
+    scp "${scp_opts[@]}" "$identity" "$user_host:~/.ssh/id_ed25519"
     ssh "${ssh_opts[@]}" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
 
     # Setup dotfiles and run setup script on remote

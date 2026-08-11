@@ -44,6 +44,12 @@ fi
 # hand interactive bash sessions over to zsh
 grep -q 'exec zsh' ~/.bashrc 2>/dev/null || echo 'case $- in *i*) exec zsh;; esac' >> ~/.bashrc
 
+# oh-my-zsh (zshrc sources it; KEEP_ZSHRC so it doesn't replace the symlinked one)
+[ -d ~/.oh-my-zsh ] || {
+    echo 'Installing oh-my-zsh...'
+    RUNZSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+}
+
 # Node.js and npm
 command -v npm > /dev/null || {
     echo 'Installing Node.js...'
