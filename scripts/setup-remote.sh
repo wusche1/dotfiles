@@ -40,6 +40,9 @@ if [ "$SHELL" != "$(which zsh)" ]; then
     echo 'Setting zsh as default shell...'
     chsh -s $(which zsh)
 fi
+# Some environments (e.g. SkyPilot) spawn bash regardless of the login shell;
+# hand interactive bash sessions over to zsh
+grep -q 'exec zsh' ~/.bashrc 2>/dev/null || echo 'case $- in *i*) exec zsh;; esac' >> ~/.bashrc
 
 # Node.js and npm
 command -v npm > /dev/null || {
