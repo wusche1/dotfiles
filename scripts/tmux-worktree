@@ -10,4 +10,11 @@ if [ "$WORKTREE_NO_LINK_VENV" != "1" ] && [ -d "$root/.venv" ]; then
     ln -s "$root/.venv" "$worktree_dir/$name/.venv"
 fi
 
+# .env / .env.remote are gitignored, so `worktree add` never brings them. Copy
+# rather than symlink: SkyPilot rsyncs file_mounts with -Pavz (no --copy-links),
+# so a symlinked .env.remote would arrive on the remote dangling.
+for f in "$root"/.env "$root"/.env.*; do
+    [ -f "$f" ] && cp "$f" "$worktree_dir/$name/"
+done
+
 tmux new-window -n "$name" -c "$worktree_dir/$name"
