@@ -17,5 +17,5 @@ export VISUAL=nvim
 eval "$(direnv hook zsh)"
 
 # Environment
-. "$HOME/.local/bin/env"
-. "$HOME/.cargo/env"
+export PATH="$HOME/.local/bin:$PATH"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
