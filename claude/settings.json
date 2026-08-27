@@ -17,6 +17,7 @@
     ]
   },
   "model": "claude-fable-5[1m]",
+  "outputStyle": "Concise",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark"
