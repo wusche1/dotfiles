@@ -3,3 +3,5 @@
 	email = wuschelschulz8@gmail.com
 [credential]
 	helper = osxkeychain
+[safe]
+	directory = *
