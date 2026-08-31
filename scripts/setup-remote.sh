@@ -63,6 +63,12 @@ command -v claude > /dev/null || {
     curl -fsSL https://claude.ai/install.sh | bash
 }
 
+# Skip Claude Code onboarding wizard (login handled by credentials copied from local Keychain)
+node -e 'const fs=require("fs"),p=process.env.HOME+"/.claude.json";const j=fs.existsSync(p)?JSON.parse(fs.readFileSync(p)):{};j.hasCompletedOnboarding=true;fs.writeFileSync(p,JSON.stringify(j))'
+
+# Register clipboard MCP server (script lands in ~/.claude via install.sh symlink)
+grep -q clipboard-mcp ~/.claude.json 2>/dev/null || claude mcp add --scope user clipboard -- uv run "$HOME/.claude/clipboard-mcp.py"
+
 # GitHub CLI
 command -v gh > /dev/null || {
     echo 'Installing gh...'
@@ -133,11 +139,6 @@ command -v gcc > /dev/null || {
     echo 'Installing build-essential for treesitter...'
     apt-get update && apt-get install -y build-essential
 }
-
-# LazyVim bootstrap: nuke stale plugin cache and sync fresh
-echo 'Syncing LazyVim plugins...'
-rm -rf ~/.local/share/nvim/lazy ~/.local/state/nvim/lazy ~/.cache/nvim
-nvim --headless "+Lazy! sync" +qa 2>/dev/null
 
 # Ghostty terminfo (for Ghostty terminal support)
 if [ ! -f ~/.terminfo/x/xterm-ghostty ]; then

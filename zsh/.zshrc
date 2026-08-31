@@ -120,6 +120,15 @@ remote() {
     scp "${scp_opts[@]}" "$identity" "$user_host:~/.ssh/id_ed25519"
     ssh "${ssh_opts[@]}" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
 
+    # Copy Claude Code subscription credentials from macOS Keychain
+    local claude_creds=$(security find-generic-password -s "Claude Code-credentials" -w)
+    if [[ -z "$claude_creds" ]]; then
+        echo "ERROR: could not read Claude Code credentials from Keychain"
+        return 1
+    fi
+    echo "$claude_creds" | \
+        ssh "${ssh_opts[@]}" "$user_host" 'mkdir -p ~/.claude && cat > ~/.claude/.credentials.json && chmod 600 ~/.claude/.credentials.json'
+
     # Setup dotfiles and run setup script on remote
     echo "Setting up remote environment..."
     ssh "${ssh_opts[@]}" "$user_host" '
@@ -130,6 +139,8 @@ remote() {
         fi
         ~/dotfiles/scripts/setup-remote.sh
         cd ~/dotfiles && ./install.sh
+        echo "Syncing neovim plugins..."
+        nvim --headless "+Lazy! sync" +qa > /dev/null 2>&1
     '
 
     # SSH into remote and start/attach tmux session
