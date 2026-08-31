@@ -18,10 +18,10 @@ if ! git --version 2>/dev/null | grep -qE 'git version (2\.(3[1-9]|[4-9][0-9])|[
     apt-get update && apt-get install -y git
 fi
 
-# direnv
-command -v direnv > /dev/null || {
+# direnv (2.28+ for dotenv_if_exists; apt's is too old)
+direnv version 2.28.0 > /dev/null 2>&1 || {
     echo 'Installing direnv...'
-    apt-get update && apt-get install -y direnv
+    curl -sfL https://direnv.net/install.sh | bin_path=/usr/local/bin bash
 }
 
 # uv
