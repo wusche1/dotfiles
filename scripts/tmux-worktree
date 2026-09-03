@@ -17,4 +17,6 @@ for f in "$root"/.env "$root"/.env.*; do
     [ -f "$f" ] && cp "$f" "$worktree_dir/$name/"
 done
 
+[ -f "$worktree_dir/$name/.envrc" ] && direnv allow "$worktree_dir/$name"
+
 tmux new-window -n "$name" -c "$worktree_dir/$name"
