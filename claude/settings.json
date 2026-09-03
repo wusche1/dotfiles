@@ -16,9 +16,38 @@
       "Bash(cat */secrets/*.env)"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "claude-fable-5-1[1m]",
   "outputStyle": "Concise",
+  "feedbackDrafts": "off",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark"
+  "theme": "dark",
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: SkyPilot-orchestrated GPU cloud execution (Vast.ai and RunPod, per CLAUDE.md `remote_execution.py` and RunPod-specific notes)",
+      "**Repository visibility**: PUBLIC — jr-brown/research-scaffold (confirmed via gh)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured — repo uses local `.env`/`.envrc` files (gitignored) for config, no managed secrets store identified",
+      "**Default / protected branches**: main (default). No rulesets or classic branch protection listed by gh — treat as unprotected",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: The trusted repo (jr-brown/research-scaffold, public) and its remotes only — origin (jr-brown/research-scaffold) and fork (wusche1/research-scaffold), both on GitHub",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar. Locally: `.env`, `.envrc` (gitignored, likely hold API keys/credentials for wandb, cloud providers, etc.)",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited)",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development — ML/research experiment orchestration (config-driven experiments, SkyPilot remote GPU execution, wandb tracking)",
+      "**Trusted repo**: /Users/julianschulz/Projects/cloned_repos/research-scaffold (this repo, working directory), remotes origin (jr-brown/research-scaffold, public) and fork (wusche1/research-scaffold) on GitHub. Public repo: only this repo's own work belongs here — content ported or first read from elsewhere is not; secrets and sensitive data are never cleared for commit/push regardless of visibility",
+      "**Org-specific CLIs**: None configured — routine tool use observed: uv (package/run management), sky (SkyPilot cluster/job control), gcloud (GCP), gh (GitHub CLI)",
+      "**Routine under this repo's prefix**: uv commands (sync/run/pytest) and sky job commands (queue/logs/cancel) are routine here per CLAUDE.md documented workflows"
+    ]
+  }
 }

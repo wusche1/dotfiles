@@ -1,3 +1,4 @@
 .claude
 .secrets
 claude/settings.local.json
+__pycache__/
