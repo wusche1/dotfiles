@@ -18,7 +18,7 @@ alias gl="git log --oneline --graph"
 
 # Claude Code
 alias cc="claude"
-alias ccdsp="claude --permission-mode bypassPermissions"
+alias ccdsp="IS_SANDBOX=1 claude --permission-mode bypassPermissions"
 alias ccnight="claude --permission-mode auto --disallowedTools AskUserQuestion"
 
 # Tmux
@@ -42,19 +42,21 @@ remote() {
     local user_host=""
     local port="22"
     local identity="$HOME/.ssh/id_ed25519"
+    local forwards=()
 
     # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -p) port="$2"; shift 2 ;;
             -i) identity="$2"; shift 2 ;;
+            -L) forwards+=(-L "$2"); shift 2 ;;
             ssh) shift ;;  # skip 'ssh' if included
             *) user_host="$1"; shift ;;
         esac
     done
 
     if [[ -z "$user_host" ]]; then
-        echo "Usage: remote user@host|ssh-alias [-p port] [-i identity_file]"
+        echo "Usage: remote user@host|ssh-alias [-p port] [-i identity_file] [-L fwd]"
         return 1
     fi
 
@@ -147,7 +149,7 @@ remote() {
     # SSH into remote and start/attach tmux session
     local session_name=$(basename "$final_path" | tr '.' '_' | tr '-' '_')
     echo "Connecting to $final_path (tmux session: $session_name)..."
-    ssh "${ssh_opts[@]}" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
+    ssh "${ssh_opts[@]}" "${forwards[@]}" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
 }
 
 # Run python script with nohup, auto-naming output from config
