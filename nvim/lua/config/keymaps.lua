@@ -39,3 +39,15 @@ vim.keymap.set("n", "<leader>pp", function()
     vim.fn.system({ "open", path })
   end
 end, { desc = "Open file externally" })
+
+vim.keymap.set("n", "<leader>ty", function()
+  local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+  local prompts = {}
+  for i, l in ipairs(lines) do
+    if l:match("^➜ ") then prompts[#prompts + 1] = i end
+  end
+  local text = table.concat(lines, "\n", prompts[#prompts - vim.v.count1], prompts[#prompts] - 1)
+  require("vim.ui.clipboard.osc52").copy("+")({ text })
+  vim.fn.setreg("+", text)
+  vim.notify("Copied " .. vim.v.count1 .. " command(s)")
+end, { desc = "Yank last N terminal commands" })
