@@ -22,9 +22,14 @@ echo "Decrypting secrets using $SSH_KEY..."
 for file in "$SCRIPT_DIR"/*.env.age; do
     if [ -f "$file" ]; then
         name=$(basename "$file" .age)
-        age -d -i "$SSH_KEY" "$file" > "$HOME/.secrets/$name"
-        chmod 600 "$HOME/.secrets/$name"
-        echo "Decrypted: $(basename "$file") -> ~/.secrets/$name"
+        if age -d -i "$SSH_KEY" "$file" > "$HOME/.secrets/$name.tmp" 2>/dev/null; then
+            mv "$HOME/.secrets/$name.tmp" "$HOME/.secrets/$name"
+            chmod 600 "$HOME/.secrets/$name"
+            echo "Decrypted: $(basename "$file") -> ~/.secrets/$name"
+        else
+            rm -f "$HOME/.secrets/$name.tmp"
+            echo "Skipped $(basename "$file"): not encrypted for $SSH_KEY (see README, Secrets)"
+        fi
     fi
 done
 

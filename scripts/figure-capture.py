@@ -17,7 +17,7 @@ import tempfile
 from pathlib import Path
 
 
-HOME = Path("/Users/julianschulz")
+HOME = Path.home()
 CONFIG_DIR = HOME / ".config" / "figure-capture"
 PROJECT_FILE = CONFIG_DIR / "current_project"
 LOG_FILE = CONFIG_DIR / "last_error.log"

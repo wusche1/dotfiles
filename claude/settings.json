@@ -1,7 +1,4 @@
 {
-  "env": {
-    "PATH": "/opt/homebrew/bin:/home/julianschulz/.local/bin:/Users/julianschulz/.local/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-  },
   "permissions": {
     "allow": [
       "Bash(ls:*)",

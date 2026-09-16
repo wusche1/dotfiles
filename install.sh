@@ -82,9 +82,13 @@ else
     chmod 700 "$HOME/.secrets"
 fi
 
-# git credentials (from GITHUB_TOKEN in secrets)
+# git identity and credentials (from secrets)
 if [ -f "$HOME/.secrets/personal.env" ]; then
     source "$HOME/.secrets/personal.env"
+    if [ -n "$GIT_NAME" ] && [ ! -f "$HOME/.gitconfig.local" ]; then
+        printf '[user]\n\tname = %s\n\temail = %s\n' "$GIT_NAME" "$GIT_EMAIL" > "$HOME/.gitconfig.local"
+        echo "Wrote ~/.gitconfig.local"
+    fi
     if [ -n "$GITHUB_TOKEN" ]; then
         echo "https://token:${GITHUB_TOKEN}@github.com" > "$HOME/.git-credentials"
         chmod 600 "$HOME/.git-credentials"

@@ -1,54 +1,96 @@
 # Dotfiles
 
-Personal dotfiles managed with symlinks.
+Personal dotfiles managed with symlinks. Forkable: nothing in the repo is tied to one person except the encrypted secrets, which you replace with your own (see [Secrets](#secrets)).
 
-## Setup
+## Prerequisites
 
-Install the core tools — [Ghostty](https://ghostty.org/) (terminal), tmux, zsh, and neovim — then run the installer below.
+Everything is installed by the package manager; `install.sh` only creates symlinks.
 
 ### macOS (Homebrew)
 
 ```bash
 brew install --cask ghostty
-brew install tmux zsh neovim
+brew install tmux zsh neovim age direnv uv ripgrep node gh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"   # .zshrc sources it
+curl -fsSL https://claude.ai/install.sh | bash                                                    # Claude Code
 ```
+
+| Tool | Why |
+|---|---|
+| [Ghostty](https://ghostty.org/) | Terminal. Config in `ghostty/` |
+| tmux 3.3+, zsh, [oh-my-zsh](https://ohmyz.sh/) | Shell and session management |
+| neovim 0.11+, ripgrep, a C compiler | LazyVim config in `nvim/` |
+| [age](https://github.com/FiloSottile/age) | Decrypts `secrets/*.age` on install |
+| [direnv](https://direnv.net/) | Hooked in `.zshenv`; per-project `.envrc` |
+| [uv](https://docs.astral.sh/uv/) | Python; also runs the clipboard MCP server |
+| node, [Claude Code](https://claude.ai/code), gh | AI-assisted workflow below |
 
 ### Linux (Debian/Ubuntu)
 
-```bash
-sudo apt update
-sudo apt install -y tmux zsh
-sudo snap install nvim --classic   # apt's neovim is usually too old for LazyVim
-```
-
-Ghostty isn't in apt — install it from the [official downloads](https://ghostty.org/download) (or your distro's package manager). On other distros, swap `apt` for your package manager (`dnf`, `pacman`, …).
+`scripts/setup-remote.sh` installs all of the above (apt, run as root). It is what the `remote` function runs on fresh machines, but it works locally too.
 
 ### Windows
 
-Not recommended — this setup targets macOS and Linux. If you must, use [WSL2](https://learn.microsoft.com/windows/wsl/) and follow the Linux steps inside it.
+Not supported. Use [WSL2](https://learn.microsoft.com/windows/wsl/) and follow the Linux steps.
 
 ## Installation
 
 ```bash
-git clone <repo-url> ~/dotfiles
+git clone <your-fork-url> ~/dotfiles
 cd ~/dotfiles
 ./install.sh
+claude mcp add --scope user clipboard -- uv run ~/.claude/clipboard-mcp.py   # once, for mcp__clipboard__copy
 ```
+
+`install.sh` symlinks every config into place (existing files are backed up as `*.backup`), decrypts secrets, and writes `~/.gitconfig.local` and `~/.git-credentials` from them. Rerun it any time; it is idempotent.
+
+## Secrets
+
+Secrets live in `~/.secrets/*.env` (plain text, never committed) and are stored in the repo as `secrets/*.env.age`, encrypted with **age** to the SSH key `~/.ssh/id_ed25519`. `install.sh` decrypts them with the matching private key, so any machine that has your key gets your secrets. Files encrypted for someone else's key are skipped with a warning.
+
+Setting up your own:
+
+```bash
+rm secrets/*.env.age                                   # the originals are encrypted for someone else
+cp secrets/personal.env.example ~/.secrets/personal.env
+cp secrets/claude.env.example ~/.secrets/claude.env
+$EDITOR ~/.secrets/*.env
+./secrets/encrypt.sh                                   # writes secrets/*.env.age, commit those
+./install.sh
+```
+
+| File | Used for |
+|---|---|
+| `personal.env` | Sourced by every zsh. `GIT_NAME`/`GIT_EMAIL` become `~/.gitconfig.local`, `GITHUB_TOKEN` becomes `~/.git-credentials`, plus anything else you want in your environment (e.g. `WANDB_ENTITY`) |
+| `claude.env` | Loaded by Claude Code at startup (`CLAUDE_ENV_FILE`). API keys for Claude and for MCP servers go here |
+
+Edit a secret: change the file in `~/.secrets/`, run `secrets/encrypt.sh`, commit.
+
+## Personalising
+
+After forking, the only things worth changing are:
+
+- `claude/settings.json`: `autoMode.environment` describes the original author's projects and trust boundaries. Delete it or rewrite it for yours.
+- `claude/rules/`: working-style rules Claude follows in every project.
+- `kinesis/`: firmware for a Kinesis Advantage360 Pro. Ignore it if you don't have one.
+- `remote` clones whatever `git remote get-url origin` says in `~/dotfiles`, so your fork is used automatically.
 
 ## Structure
 
 ```
 dotfiles/
-├── zsh/.zshrc           # Zsh configuration
-├── git/.gitconfig       # Git configuration
-├── claude/settings.json # Claude Code settings
-├── vscode/settings.json # VS Code settings
-└── install.sh           # Symlink installer
+├── install.sh            # Symlink installer
+├── zsh/                  # .zshenv (PATH, secrets, direnv), .zshrc (aliases, remote, worktrees)
+├── tmux/.tmux.conf       # Kanagawa theme, C-Space prefix, F12 nested-session toggle
+├── ghostty/              # Kanagawa theme, Opt+hjkl splits, cursor shader
+├── nvim/                 # LazyVim
+├── git/.gitconfig        # Generic; identity in ~/.gitconfig.local
+├── claude/               # Claude Code settings, rules, agents, skills, clipboard MCP
+├── vscode/settings.json
+├── scripts/              # tmux-worktree, tmux-sessions, setup-remote.sh
+├── secrets/              # *.env.age (encrypted), *.env.example (templates), encrypt/decrypt
+└── kinesis/              # Advantage360 Pro ZMK keymap; `make` builds firmware via Docker
 ```
-
-## How it works
-
-The install script creates symlinks from your home directory to this repo. Any changes you make to the dotfiles (either in `~` or in this repo) will be reflected in both places.
 
 ## Workflow
 
@@ -90,3 +132,13 @@ Press `F12` to toggle local tmux off so your `Ctrl+Space` prefix passes through 
 Run Claude Code with `cc`. For autonomous operation, `ccdsp` starts Claude with all tool permissions auto-allowed (a workaround for remote machines where `--dangerously-skip-permissions` requires root privileges that aren't available on e.g. RunPod).
 
 Secrets are age-encrypted in the repo and decrypted on install using your SSH key, so Claude Code gets its API keys automatically on any machine after running `install.sh`.
+
+## Kinesis Advantage360 Pro
+
+`kinesis/` holds the ZMK keymap (stock Kinesis layout plus: macro 1 = F12 for the tmux toggle, macro 3/4 = Cmd+C/Cmd+V, backlight idle timeout 5 min). Build with Docker running:
+
+```bash
+cd kinesis && make        # produces firmware/left.uf2 and firmware/right.uf2
+```
+
+Flash each half over USB-C with a data cable: hold Mod and press macro 1 (left) or macro 3 (right), the half lights up green and mounts as `ADV360PRO`, copy the matching `.uf2` onto it. Flash the left half first, power-cycle both, then the right half with the left switched on.

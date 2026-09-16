@@ -134,17 +134,18 @@ remote() {
 
     # Setup dotfiles and run setup script on remote
     echo "Setting up remote environment..."
-    ssh "${ssh_opts[@]}" "$user_host" '
+    local repo=$(git -C ~/dotfiles remote get-url origin)
+    ssh "${ssh_opts[@]}" "$user_host" "
         if [ ! -d ~/dotfiles ]; then
-            git clone https://github.com/wusche1/dotfiles.git ~/dotfiles
+            git clone $repo ~/dotfiles
         else
             cd ~/dotfiles && git pull
         fi
         ~/dotfiles/scripts/setup-remote.sh
         cd ~/dotfiles && ./install.sh
-        echo "Syncing neovim plugins..."
-        nvim --headless "+Lazy! sync" +qa > /dev/null 2>&1
-    '
+        echo 'Syncing neovim plugins...'
+        nvim --headless '+Lazy! sync' +qa > /dev/null 2>&1
+    "
 
     # SSH into remote and start/attach tmux session
     local session_name=$(basename "$final_path" | tr '.' '_' | tr '-' '_')

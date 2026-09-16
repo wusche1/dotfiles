@@ -9,7 +9,7 @@ Inspired by [vossenwout/pookie-dotfiles](https://github.com/vossenwout/pookie-do
 - `tmux/.tmux.conf` — Kanagawa theme, `C-Space` prefix, vim bindings, F12 nested session toggle
 - `ghostty/config` — Kanagawa Wave theme, Opt+hjkl split nav, custom cursor shader
 - `nvim/` — LazyVim-based neovim config
-- `git/.gitconfig` — User: Julian Schulz
+- `git/.gitconfig` — Generic; identity comes from `~/.gitconfig.local`, written by `install.sh` from `GIT_NAME`/`GIT_EMAIL` in secrets
 - `claude/` — Claude Code settings, rules, agents, skills (symlinked to `~/.claude/`)
 - `scripts/` — `tmux-worktree` (git worktree + tmux window), `setup-remote.sh` (bootstraps remote dev machines)
 - `secrets/` — Age-encrypted env files, not committed in plaintext

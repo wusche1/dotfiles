@@ -1,6 +1,5 @@
-[user]
-	name = Julian Schulz
-	email = wuschelschulz8@gmail.com
+[include]
+	path = ~/.gitconfig.local
 [credential]
 	helper = osxkeychain
 	helper = store
