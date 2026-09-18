@@ -11,6 +11,7 @@ Everything is installed by the package manager; `install.sh` only creates symlin
 ```bash
 brew install --cask ghostty
 brew install tmux zsh neovim age direnv uv ripgrep node gh
+brew install --cask karabiner-elements   # optional: mouse side buttons -> copy/paste (karabiner/)
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"   # .zshrc sources it
 curl -fsSL https://claude.ai/install.sh | bash                                                    # Claude Code
 ```
@@ -87,6 +88,7 @@ dotfiles/
 ├── git/.gitconfig        # Generic; identity in ~/.gitconfig.local
 ├── claude/               # Claude Code settings, rules, agents, skills, clipboard MCP
 ├── vscode/settings.json
+├── karabiner/            # Mouse back/forward buttons -> Cmd+C/Cmd+V (macOS)
 ├── scripts/              # tmux-worktree, tmux-sessions, setup-remote.sh
 ├── secrets/              # *.env.age (encrypted), *.env.example (templates), encrypt/decrypt
 └── kinesis/              # Advantage360 Pro ZMK keymap; `make` builds firmware via Docker

@@ -54,6 +54,9 @@ link "$DOTFILES_DIR/claude/agents" "$HOME/.claude/agents"
 link "$DOTFILES_DIR/claude/skills" "$HOME/.claude/skills"
 link "$DOTFILES_DIR/claude/clipboard-mcp.py" "$HOME/.claude/clipboard-mcp.py"
 
+# karabiner (macOS mouse button remaps)
+[[ "$OSTYPE" == "darwin"* ]] && link "$DOTFILES_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner/karabiner.json"
+
 # vscode
 if [[ "$OSTYPE" == "darwin"* ]]; then
     VSCODE_DIR="$HOME/Library/Application Support/Code/User"
