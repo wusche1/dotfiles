@@ -40,6 +40,13 @@ vim.keymap.set("n", "<leader>pp", function()
   end
 end, { desc = "Open file externally" })
 
+vim.keymap.set("n", "<leader>rc", function()
+  local dir = vim.fn.stdpath("config") .. "/lua/config/"
+  vim.cmd.source(dir .. "options.lua")
+  vim.cmd.source(dir .. "keymaps.lua")
+  vim.notify("Reloaded options + keymaps")
+end, { desc = "Reload config" })
+
 vim.keymap.set("n", "<leader>ty", function()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   local prompts = {}

@@ -13,23 +13,28 @@
       "Bash(cat */secrets/*.env)",
       "AskUserQuestion"
     ],
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false
   },
-  "model": "claude-fable-5-1[1m]",
+  "model": "fable[1m]",
   "outputStyle": "Concise",
+  "sandbox": {
+    "enabled": false
+  },
   "feedbackDrafts": "off",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
+  "isolatePeerMachines": false,
+  "crossSessionInbound": "accept",
   "autoMode": {
     "environment": [
       "### Org-wide",
       "**Organization**: None configured",
       "**Cloud provider(s)**: None configured",
-      "**Repository visibility**: not queryable here \u2014 assume private per shipped default (no visibility signal found; repo name/host give no public indicator)",
-      "**Internal sharing / snippet hosting**: None configured \u2014 treat public paste/gist services as outside the trust boundary",
+      "**Repository visibility**: not queryable here — assume private per shipped default (no visibility signal found; repo name/host give no public indicator)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
       "**Secrets management**: None configured",
       "**Default / protected branches**: main (default branch); protection status not queryable here",
       "**CI/CD deploy targets**: None configured",
@@ -37,23 +42,18 @@
       "**Source control**: The trusted repo (github.com:stegano-ai/steg-transfer-learning.git) and its remote(s) only",
       "**Trusted internal domains**: None configured",
       "**Trusted cloud buckets**: None configured",
-      "**Key internal services**: Tinker (TINKER_API_KEY), Weights & Biases (WANDB_API_KEY) \u2014 used for training/experiment tracking per CLAUDE.md",
+      "**Key internal services**: Tinker (TINKER_API_KEY), Weights & Biases (WANDB_API_KEY) — used for training/experiment tracking per CLAUDE.md",
       "**Internal package registry**: None configured",
-      "**Sensitive data locations & audiences**: .env, .envrc, .secrets \u2014 treat as credential-bearing; share only with audiences cleared at the [named+specifics] bar",
+      "**Sensitive data locations & audiences**: .env, .envrc, .secrets — treat as credential-bearing; share only with audiences cleared at the [named+specifics] bar",
       "**Data retention / declassification**: None configured",
       "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment",
-      "**Protected deployment namespaces / environments**: None configured \u2014 fall back to the Sensitive remote targets heuristic",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
       "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
       "### User-specific",
-      "**Primary use of Claude Code**: software development (ML research \u2014 steganographic reasoning benchmark experiments: sft, prompting, rl)",
-      "**Trusted repo**: /workspace/steg-transfer-learning (github.com:stegano-ai/steg-transfer-learning.git), visibility unconfirmed \u2014 treat as private by default",
-      "**Org-specific CLIs**: None configured \u2014 routine project CLI is `uv` (uv run pytest, uv add, uv run python) under this repo",
+      "**Primary use of Claude Code**: software development (ML research — steganographic reasoning benchmark experiments: sft, prompting, rl)",
+      "**Trusted repo**: /workspace/steg-transfer-learning (github.com:stegano-ai/steg-transfer-learning.git), visibility unconfirmed — treat as private by default",
+      "**Org-specific CLIs**: None configured — routine project CLI is `uv` (uv run pytest, uv add, uv run python) under this repo",
       "Debug-only experiment runs (configs/debug.yaml) are routine; non-debug experiment launches require explicit user approval per CLAUDE.md Run Discipline"
     ]
-  },
-  "sandbox": {
-    "enabled": false
-  },
-  "crossSessionInbound": "accept",
-  "isolatePeerMachines": false
+  }
 }
