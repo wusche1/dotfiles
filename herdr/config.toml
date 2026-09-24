@@ -29,12 +29,12 @@ swap_pane_right = "prefix+shift+l"
 
 [[keys.command]]
 key = "prefix+shift+s"
-type = "shell"
-command = "d=/workspace; [ -d $d ] || d=~/Projects; \"$HERDR_BIN_PATH\" workspace create --cwd $d --focus"
+type = "plugin_action"
+command = "julian.new-workspace.create"
 description = "new workspace in projects dir"
 
 [ui.sidebar.spaces]
-rows = [["state_icon", "workspace"], ["$idx", "branch", "git_status"]]
+rows = [["state_icon", "workspace"], ["index", "branch", "git_status"]]
 
 [ui.sidebar.agents]
-rows = [["state_icon", "machine", "workspace", "tab"], ["$aidx", "agent"]]
+rows = [["state_icon", "machine", "workspace", "tab"], ["index", "agent"]]
