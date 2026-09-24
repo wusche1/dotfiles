@@ -3,6 +3,7 @@
 set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${0}")" && pwd)"
+export PATH="$HOME/.local/bin:$PATH"
 
 link() {
     local src="$1"
