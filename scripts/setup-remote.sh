@@ -57,6 +57,12 @@ command -v npm > /dev/null || {
     apt-get install -y nodejs
 }
 
+# herdr
+command -v herdr > /dev/null || [ -x ~/.local/bin/herdr ] || {
+    echo 'Installing herdr...'
+    curl -fsSL https://herdr.dev/install.sh | sh
+}
+
 # Claude Code CLI
 command -v claude > /dev/null || {
     echo 'Installing Claude Code...'

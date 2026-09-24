@@ -35,6 +35,10 @@ link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
 # tmux
 link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
 
+# herdr
+link "$DOTFILES_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+command -v herdr > /dev/null && herdr plugin link "$DOTFILES_DIR/herdr/plugins/agent-index" > /dev/null
+
 # nvim
 link "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
 
