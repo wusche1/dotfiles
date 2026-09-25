@@ -18,7 +18,7 @@ keybind = opt+shift+l=new_split:right
 
 # Escape key shortcuts
 keybind = ctrl+left_bracket=text:\x1b
-keybind = shift+enter=text:\x1b\r
+keybind = shift+enter=csi:13;3u
 
 # macOS Option key as Alt
 macos-option-as-alt = true
