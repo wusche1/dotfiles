@@ -26,6 +26,7 @@
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "theme": "dark",
+  "editorMode": "vim",
   "isolatePeerMachines": false,
   "crossSessionInbound": "accept",
   "autoMode": {
