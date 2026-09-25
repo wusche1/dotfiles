@@ -1,5 +1,5 @@
 # /// script
-# dependencies = ["mcp"]
+# dependencies = ["mcp<2"]
 # ///
 import base64
 from mcp.server.fastmcp import Context, FastMCP
