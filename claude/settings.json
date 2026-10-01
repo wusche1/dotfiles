@@ -16,7 +16,7 @@
     "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false
   },
-  "model": "claude-fable-5-1[1m]",
+  "model": "opus",
   "outputStyle": "Concise",
   "sandbox": {
     "enabled": false
