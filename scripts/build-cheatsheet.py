@@ -111,7 +111,7 @@ code{{background:#f0f0f0;color:#000;border-color:#ccc}}
 </header>
 {hero}
 <div class=grid>{cards}</div>
-<footer>Generated from <code>docs/cheatsheet.yaml</code> · tmux docs: <a href="https://github.com/tmux/tmux/wiki">tmux wiki</a> · Claude Code: <a href="https://code.claude.com/docs">code.claude.com/docs</a></footer>
+<footer>Generated from <code>docs/cheatsheet.yaml</code> · herdr docs: <a href="https://herdr.dev/docs/">herdr.dev</a> · Claude Code: <a href="https://code.claude.com/docs">code.claude.com/docs</a></footer>
 </div>
 </body>
 </html>

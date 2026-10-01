@@ -1,11 +1,12 @@
-title: tmux + Claude Code
+title: herdr + Claude Code
 subtitle: A take-home guide for running terminal coding sessions
-updated: JUN 2026
+updated: OCT 2026
 intro: >
-  tmux keeps your work alive in the background. Close the terminal, sleep the
-  laptop, or drop an SSH connection — your session (and Claude) keeps running.
-  You just reattach. Almost every command is the prefix <b>Ctrl+Space</b>
-  (press and release), then a key.
+  herdr keeps your work alive in the background. Close the terminal, sleep the
+  laptop, or drop an SSH connection — your workspaces (and Claude) keep running.
+  You just run <code>herdr</code> again. Almost every command is the prefix
+  <b>Ctrl+Space</b> (press and release), then a key. <b>Ctrl+Space ?</b> shows
+  them all.
 
 # Conceptual sections render as prose cards (use `text`: a list of paragraphs).
 # Reference sections render as key/description tables (use `rows`).
@@ -15,39 +16,39 @@ sections:
   - name: The mental model
     kind: concept
     text:
-      - "tmux nests three layers. Give each one a job and you always know where things live."
-      - "<b>Session = project.</b> One per repo. The session is the container that stays alive when you detach and walk away."
-      - "<b>Window = branch.</b> Inside a project, one window per branch / git worktree. Claude can refactor on one branch while another sits untouched in the next window."
-      - "<b>Pane = agent vs. your eyes.</b> Split a window so the agent works in one pane while you watch the code, run tests, or read a diff in the other."
-      - "In one line: <b>session = which project, window = which branch, pane = agent vs. your view of the code.</b>"
+      - "herdr nests three layers. Give each one a job and you always know where things live."
+      - "<b>Workspace = project.</b> One per repo, listed in the sidebar. A workspace stays alive when you detach and walk away."
+      - "<b>Tab = branch.</b> Inside a project, one tab per branch / git worktree. Claude can refactor on one branch while another sits untouched in the next tab."
+      - "<b>Pane = agent vs. your eyes.</b> Split a tab so the agent works in one pane while you watch the code, run tests, or read a diff in the other."
+      - "In one line: <b>workspace = which project, tab = which branch, pane = agent vs. your view of the code.</b> The sidebar also shows which agents are working, idle, or waiting for you."
 
   - name: Survival keys
     note: If you remember nothing else, remember these.
     rows:
-      - keys: ["Ctrl+Space", "d"]
+      - keys: ["Ctrl+Space", "q"]
         desc: Detach — leave everything running and walk away
-      - keys: ["tmux attach"]
-        desc: Reattach to your running sessions
-      - keys: ["tmux ls"]
-        desc: List what is currently running
+      - keys: ["herdr"]
+        desc: Reattach to everything that is running
+      - keys: ["Ctrl+Space", "?"]
+        desc: Show every keybinding
       - keys: ["Ctrl+Space", "["]
-        desc: Scroll up to read history — arrows to move, q to quit
+        desc: Scroll up to read history — vim keys to move, q to quit
 
-  - name: Windows = branches
-    note: Like tabs. One per branch / worktree. The bottom bar is your branch list.
+  - name: Tabs = branches
+    note: One per branch / worktree. Tabs are listed under their workspace in the sidebar.
     rows:
-      - keys: ["Ctrl+Space", "W"]
-        desc: Create a git worktree + window for a new branch in one step
+      - keys: ["Ctrl+Space", "Shift+W"]
+        desc: Create a git worktree + tab for a new branch in one step
       - keys: ["Ctrl+Space", "c"]
-        desc: New window (same branch)
+        desc: New tab (same branch)
       - keys: ["Ctrl+Space", "n / p"]
-        desc: Next / previous window
+        desc: Next / previous tab
       - keys: ["Ctrl+Space", "1 2 3"]
-        desc: Jump to window by number
-      - keys: ["Ctrl+Space", ","]
-        desc: Rename the current window
-      - keys: ["exit"]
-        desc: Close a window (just exit its last shell)
+        desc: Jump to tab by number
+      - keys: ["Ctrl+Space", "Shift+T"]
+        desc: Rename the current tab
+      - keys: ["Ctrl+Space", "Alt+X"]
+        desc: Close the current tab
 
   - name: Panes = code + agents
     note: Split the screen so the agent and your view of the code sit side by side.
@@ -56,21 +57,41 @@ sections:
         desc: Split left/right (e.g. Claude left, terminal right)
       - keys: ["Ctrl+Space", "s"]
         desc: Split top/bottom
-      - keys: ["Ctrl+Space", "h j k l"]
-        desc: Move between panes (vim directions)
+      - keys: ["Ctrl+h j k l"]
+        desc: Move between panes (vim directions, no prefix needed)
+      - keys: ["Ctrl+Space", "z"]
+        desc: Zoom the current pane to full size (again to undo)
       - keys: ["exit"]
         desc: Close a pane
 
-  - name: Sessions = projects
-    note: One per repo. Switching projects means switching sessions, not closing them.
+  - name: Workspaces = projects
+    note: One per repo. Switching projects means switching workspaces, not closing them.
     rows:
-      - keys: ["Ctrl+Space", "S"]
-        desc: New named session in ~/Projects
-      - keys: ["Ctrl+Space", "/"]
-        desc: Quick-switch between sessions, then press a number
+      - keys: ["Ctrl+Space", "Shift+S"]
+        desc: New workspace, starting in ~/Projects — then cd into your repo
+      - keys: ["Ctrl+Space", "w"]
+        desc: Workspace picker — j/k to move, Enter to open
+      - keys: ["Ctrl+Space", "Shift+1 2 3"]
+        desc: Jump to workspace by number
+      - keys: ["Ctrl+Space", "Shift+E"]
+        desc: Rename the current workspace
+      - keys: ["Ctrl+Space", "Shift+X"]
+        desc: Close a workspace (closes all its tabs)
+
+  - name: Agents
+    note: herdr tracks every Claude session. The sidebar icon tells you who needs you.
+    rows:
+      - keys: ["Ctrl+Space", "a"]
+        desc: Jump to the next agent, across all workspaces
+      - keys: ["Ctrl+Space", "Shift+A"]
+        desc: Previous agent
+      - keys: ["Ctrl+Space", "Ctrl+1 2 3"]
+        desc: Jump to agent by number
+      - keys: ["Ctrl+Space", "o"]
+        desc: Open the pane behind the latest notification
 
   - name: Copy &amp; paste
-    note: Mouse selection often works too — this is the keyboard way.
+    note: Mouse selection copies directly — this is the keyboard way.
     rows:
       - keys: ["Ctrl+Space", "["]
         desc: Enter scroll/copy mode
@@ -78,22 +99,16 @@ sections:
         desc: Start selecting (then move with vim keys)
       - keys: ["y"]
         desc: Copy selection and exit
-      - keys: ["Ctrl+Space", "]"]
-        desc: Paste
-
-  - name: Gotchas
-    kind: concept
-    text:
-      - "<b>F12</b> toggles tmux's keys off, for when you SSH into another tmux. If the prefix seems to stop working and you see <code>[OFF]</code> in the bottom-right, press <b>F12</b> to turn it back on."
-      - "<b>Mouse is on:</b> click panes/windows to switch, drag borders to resize, scroll to read back."
+      - keys: ["Cmd+V"]
+        desc: Paste (normal terminal paste)
 
   - name: A typical Claude Code session
     kind: concept
     text:
-      - "1. <code>tmux attach</code> — or start fresh by running <code>tmux</code>"
-      - "2. <b>Ctrl+Space S</b> → name the session after your project"
+      - "1. <code>herdr</code> — opens your workspaces, or starts fresh"
+      - "2. <b>Ctrl+Space Shift+S</b> → new workspace, <code>cd</code> into your project"
       - "3. Run <code>claude</code>"
       - "4. Need a scratch terminal? <b>Ctrl+Space v</b>"
-      - "5. New task / branch? <b>Ctrl+Space W</b> spins up a worktree + window"
-      - "6. Walking away? <b>Ctrl+Space d</b> — Claude keeps working"
-      - "7. Back later? <code>tmux attach</code>"
+      - "5. New task / branch? <b>Ctrl+Space Shift+W</b> spins up a worktree + tab"
+      - "6. Walking away? <b>Ctrl+Space q</b> — Claude keeps working"
+      - "7. Back later? <code>herdr</code>, then <b>Ctrl+Space a</b> jumps to the next agent"
