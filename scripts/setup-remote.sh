@@ -87,19 +87,6 @@ command -v gh > /dev/null || {
     && apt-get install -y gh
 }
 
-# tmux (need 3.3+ for allow-passthrough and pane-border-lines)
-if ! command -v tmux > /dev/null || ! tmux -V 2>/dev/null | awk '{if ($2 >= 3.3) exit 0; else exit 1}'; then
-    echo 'Installing tmux 3.5a from source...'
-    apt-get update && apt-get install -y libevent-dev ncurses-dev build-essential bison pkg-config
-    curl -Lo /tmp/tmux.tar.gz https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz
-    cd /tmp && tar xzf tmux.tar.gz && cd tmux-3.5a
-    if ! (./configure && make -j$(nproc) && make install); then
-        echo 'tmux source build failed, falling back to apt...'
-        apt-get install -y tmux
-    fi
-    cd /tmp && rm -rf tmux-3.5a tmux.tar.gz
-fi
-
 # neovim (smart install - try prebuilt, build from source if needed)
 if ! command -v nvim > /dev/null || ! nvim --version 2>/dev/null | grep -q "v0.11"; then
     echo 'Installing neovim...'

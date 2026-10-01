@@ -21,9 +21,6 @@ alias cc="claude"
 alias ccdsp="IS_SANDBOX=1 claude --permission-mode bypassPermissions"
 alias ccnight="claude --permission-mode auto --disallowedTools AskUserQuestion"
 
-# Tmux
-alias tmux="TERM=xterm-256color tmux"
-
 # Navigation
 alias ..="cd .."
 alias ...="cd ../.."
@@ -36,106 +33,49 @@ symhere() {
     echo "Linked .claude and .secrets"
 }
 
-# Open VS Code to remote server with interactive folder selection
-# Usage: remote user@host [-p port] [-i identity_file]
+# Provision a remote machine and save it as a herdr machine (shows up in the sidebar)
+# Usage: remote ssh-alias | remote user@host [-p port] [-i identity_file]
 remote() {
-    local user_host=""
-    local port="22"
-    local identity="$HOME/.ssh/id_ed25519"
-    local forwards=()
-
-    # Parse arguments
+    local user_host="" port="22" identity="$HOME/.ssh/id_ed25519"
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -p) port="$2"; shift 2 ;;
             -i) identity="$2"; shift 2 ;;
-            -L) forwards+=(-L "$2"); shift 2 ;;
             ssh) shift ;;  # skip 'ssh' if included
             *) user_host="$1"; shift ;;
         esac
     done
-
     if [[ -z "$user_host" ]]; then
-        echo "Usage: remote user@host|ssh-alias [-p port] [-i identity_file] [-L fwd]"
+        echo "Usage: remote ssh-alias | remote user@host [-p port] [-i identity_file]"
         return 1
     fi
 
-    # Bare alias (e.g. a SkyPilot cluster like "whitebox"): ~/.ssh/config supplies
-    # user/port/key — passing -p/-i here would override it and break the connection.
-    local ssh_opts=(-o ServerAliveInterval=60 -o ServerAliveCountMax=3)
-    local scp_opts=()
+    # herdr machines are ssh-config aliases; turn user@host into one
+    local host="$user_host"
     if [[ "$user_host" == *@* ]]; then
-        ssh_opts+=(-p "$port" -i "$identity")
-        scp_opts+=(-P "$port" -i "$identity")
+        host="remote-$port"
+        printf '\nHost %s\n    HostName %s\n    User %s\n    Port %s\n    IdentityFile %s\n' \
+            "$host" "${user_host#*@}" "${user_host%@*}" "$port" "$identity" >> ~/.ssh/config
     fi
+    local ssh_opts=(-o ServerAliveInterval=60 -o ServerAliveCountMax=3)
 
-    echo "Connecting to $user_host..."
+    # SSH key for decrypting secrets on the remote
+    ssh "${ssh_opts[@]}" "$host" "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+    scp "$identity" "$host:~/.ssh/id_ed25519"
+    ssh "${ssh_opts[@]}" "$host" "chmod 600 ~/.ssh/id_ed25519"
 
-    # Get folders in /workspace/
-    local folder_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/*/ 2>/dev/null | xargs -n1 basename")
-    local -a folders
-    folders=("${(f)folder_list}")
-
-    if [[ -z "$folder_list" ]]; then
-        # No /workspace (e.g. SkyPilot pod): repo lives in ~/sky_workdir
-        local final_path=$(ssh "${ssh_opts[@]}" "$user_host" '[ -d "$HOME/sky_workdir" ] && echo "$HOME/sky_workdir" || echo /workspace')
-    else
-        local chosen_folder=""
-        if [[ ${#folders[@]} -eq 1 ]]; then
-            chosen_folder="${folders[1]}"
-            echo "Found: $chosen_folder"
-        else
-            echo "Select folder:"
-            for i in {1..${#folders[@]}}; do
-                echo "  $i) ${folders[$i]}"
-            done
-            read "choice?Enter number: "
-            chosen_folder="${folders[$choice]}"
-        fi
-
-        local final_path="/workspace/$chosen_folder"
-
-        # Check if it's a worktree folder (contains "worktree" in name)
-        if [[ "$chosen_folder" == *worktree* ]]; then
-            local branch_list=$(ssh "${ssh_opts[@]}" "$user_host" "ls -d /workspace/$chosen_folder/*/ 2>/dev/null | xargs -n1 basename")
-            local -a branches
-            branches=("${(f)branch_list}")
-
-            if [[ -z "$branch_list" ]]; then
-                echo "No branches found in $chosen_folder"
-                return 1
-            elif [[ ${#branches[@]} -eq 1 ]]; then
-                final_path="/workspace/$chosen_folder/${branches[1]}"
-                echo "Found branch: ${branches[1]}"
-            else
-                echo "Select branch:"
-                for i in {1..${#branches[@]}}; do
-                    echo "  $i) ${branches[$i]}"
-                done
-                read "choice?Enter number: "
-                final_path="/workspace/$chosen_folder/${branches[$choice]}"
-            fi
-        fi
-    fi
-
-    # Copy SSH key for decrypting secrets (needed for dotfiles setup)
-    ssh "${ssh_opts[@]}" "$user_host" "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-    scp "${scp_opts[@]}" "$identity" "$user_host:~/.ssh/id_ed25519"
-    ssh "${ssh_opts[@]}" "$user_host" "chmod 600 ~/.ssh/id_ed25519"
-
-    # Copy Claude Code subscription credentials from macOS Keychain
+    # Claude Code subscription credentials from macOS Keychain
     local claude_creds=$(security find-generic-password -s "Claude Code-credentials" -w)
     if [[ -z "$claude_creds" ]]; then
         echo "ERROR: could not read Claude Code credentials from Keychain"
         return 1
     fi
     echo "$claude_creds" | \
-        ssh "${ssh_opts[@]}" "$user_host" 'mkdir -p ~/.claude && cat > ~/.claude/.credentials.json && chmod 600 ~/.claude/.credentials.json'
+        ssh "${ssh_opts[@]}" "$host" 'mkdir -p ~/.claude && cat > ~/.claude/.credentials.json && chmod 600 ~/.claude/.credentials.json'
 
-    # Setup dotfiles and run setup script on remote
     echo "Setting up remote environment..."
     local repo=$(git -C ~/dotfiles remote get-url origin)
-    ssh "${ssh_opts[@]}" "$user_host" "
+    ssh "${ssh_opts[@]}" "$host" "
         if [ ! -d ~/dotfiles ]; then
             git clone $repo ~/dotfiles
         else
@@ -147,10 +87,7 @@ remote() {
         nvim --headless '+Lazy! sync' +qa > /dev/null 2>&1
     "
 
-    # SSH into remote and start/attach tmux session
-    local session_name=$(basename "$final_path" | tr '.' '_' | tr '-' '_')
-    echo "Connecting to $final_path (tmux session: $session_name)..."
-    ssh "${ssh_opts[@]}" "${forwards[@]}" "$user_host" -t "cd $final_path && (tmux attach -t $session_name 2>/dev/null || tmux new -s $session_name)"
+    herdr machine add --label "$host" "$host"
 }
 
 # Run python script with nohup, auto-naming output from config

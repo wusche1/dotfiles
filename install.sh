@@ -33,9 +33,6 @@ link "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
 # git
 link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
 
-# tmux
-link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
-
 # herdr
 link "$DOTFILES_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml"
 command -v herdr > /dev/null && for p in "$DOTFILES_DIR"/herdr/plugins/*/; do herdr plugin link "$p" > /dev/null; done
@@ -76,9 +73,7 @@ fi
 
 # scripts
 mkdir -p "$HOME/.local/bin"
-link "$DOTFILES_DIR/scripts/tmux-worktree" "$HOME/.local/bin/tmux-worktree"
-link "$DOTFILES_DIR/scripts/tmux-sessions" "$HOME/.local/bin/tmux-sessions"
-link "$DOTFILES_DIR/scripts/tmux-bind-sessions" "$HOME/.local/bin/tmux-bind-sessions"
+link "$DOTFILES_DIR/scripts/herdr-worktree" "$HOME/.local/bin/herdr-worktree"
 
 # secrets
 if ls "$DOTFILES_DIR/secrets"/*.env.age 1>/dev/null 2>&1; then

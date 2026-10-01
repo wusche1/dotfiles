@@ -10,7 +10,8 @@ Everything is installed by the package manager; `install.sh` only creates symlin
 
 ```bash
 brew install --cask ghostty
-brew install tmux zsh neovim age direnv uv ripgrep node gh
+brew install zsh neovim age direnv uv ripgrep node gh
+curl -fsSL https://herdr.dev/install.sh | sh                                                     # herdr (see below for the patched build)
 brew install --cask karabiner-elements   # optional: mouse side buttons -> copy/paste (karabiner/)
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"   # .zshrc sources it
 curl -fsSL https://claude.ai/install.sh | bash                                                    # Claude Code
@@ -19,7 +20,8 @@ curl -fsSL https://claude.ai/install.sh | bash                                  
 | Tool | Why |
 |---|---|
 | [Ghostty](https://ghostty.org/) | Terminal. Config in `ghostty/` |
-| tmux 3.3+, zsh, [oh-my-zsh](https://ohmyz.sh/) | Shell and session management |
+| [herdr](https://herdr.dev/) | Workspace/agent manager (replaces tmux). Config in `herdr/` |
+| zsh, [oh-my-zsh](https://ohmyz.sh/) | Shell |
 | neovim 0.11+, ripgrep, a C compiler | LazyVim config in `nvim/` |
 | [age](https://github.com/FiloSottile/age) | Decrypts `secrets/*.age` on install |
 | [direnv](https://direnv.net/) | Hooked in `.zshenv`; per-project `.envrc` |
@@ -81,15 +83,15 @@ After forking, the only things worth changing are:
 ```
 dotfiles/
 ├── install.sh            # Symlink installer
-├── zsh/                  # .zshenv (PATH, secrets, direnv), .zshrc (aliases, remote, worktrees)
-├── tmux/.tmux.conf       # Kanagawa theme, C-Space prefix, F12 nested-session toggle
+├── zsh/                  # .zshenv (PATH, secrets, direnv), .zshrc (aliases, remote)
+├── herdr/                # config.toml, plugins/, herdr.patch + build.sh for the patched build
 ├── ghostty/              # Kanagawa theme, Opt+hjkl splits, cursor shader
 ├── nvim/                 # LazyVim
 ├── git/.gitconfig        # Generic; identity in ~/.gitconfig.local
 ├── claude/               # Claude Code settings, rules, agents, skills, clipboard MCP
 ├── vscode/settings.json
 ├── karabiner/            # Mouse back/forward buttons -> Cmd+C/Cmd+V (macOS)
-├── scripts/              # tmux-worktree, tmux-sessions, setup-remote.sh
+├── scripts/              # herdr-worktree, setup-remote.sh
 ├── secrets/              # *.env.age (encrypted), *.env.example (templates), encrypt/decrypt
 └── kinesis/              # Advantage360 Pro ZMK keymap; `make` builds firmware via Docker
 ```
@@ -101,33 +103,43 @@ The goal is maximally parallelized Claude Code integration — working on many t
 ### Tools
 
 - **[Ghostty](https://ghostty.org/)** as the terminal
-- **tmux** for session and window management
+- **[herdr](https://herdr.dev/)** for workspaces, tabs, panes and agent status, locally and on remote machines
 - **neovim** (LazyVim) for viewing and editing files
 - **Claude Code** (`cc`) for AI-assisted development
 
-Vim-style `hjkl` navigation works at every layer: Ghostty splits (`Opt+hjkl`), tmux panes (`prefix+hjkl`), and neovim.
+Vim-style `hjkl` navigation works at every layer: Ghostty splits (`Opt+hjkl`), herdr panes (`Ctrl+hjkl`), and neovim. The herdr prefix is `Ctrl+Space`; `prefix+?` lists every binding.
 
-### One project = one tmux session
+### One project = one herdr workspace
 
-Each project (repo) lives in its own tmux session. Create a new one with `prefix S`, which prompts for a name and opens it in `~/Projects`.
+Each project (repo) is a workspace in the sidebar. `prefix+shift+s` creates one in `~/Projects` (`/workspace` on remotes). `prefix+w` opens the workspace picker (`j`/`k` to move, `l` or Enter to open), `prefix+shift+1..9` jumps directly.
 
-### One feature = one worktree + one tmux window
+### One feature = one worktree + one tab
 
-Within a project, each feature gets its own git branch **and** its own [git worktree](https://git-scm.com/docs/git-worktree), so you never need to stash or switch branches. Press `prefix W`, enter a name, and a new branch, worktree, and tmux window are created automatically. The `.venv` from the main repo is symlinked into each worktree so you don't reinstall dependencies.
+Within a project, each feature gets its own git branch **and** its own [git worktree](https://git-scm.com/docs/git-worktree), so you never need to stash or switch branches. Press `prefix+shift+w`, enter a branch name, and `scripts/herdr-worktree` creates the branch and a checkout in `<repo>_worktree/<branch>` next to the repo, then opens it in a new tab. The `.venv` from the main repo is symlinked into each worktree so you don't reinstall dependencies.
 
-This clean separation — every issue on its own branch in its own directory — means you can run Claude Code independently in each window without any interference between tasks.
+This clean separation — every issue on its own branch in its own directory — means you can run Claude Code independently in each tab without any interference between tasks. `prefix+a` / `prefix+shift+a` cycle through agents across all workspaces; `prefix+ctrl+1..9` focuses one.
 
 ### Remote development
 
-For work that's better done on a remote machine (e.g. GPU training on RunPod), keep a local tmux session called `remote` and SSH in:
+For work that's better done on a remote machine (e.g. GPU training on RunPod), provision it once:
 
 ```bash
-remote ssh root@213.192.2.99 -p 40110 -i ~/.ssh/id_ed25519
+remote root@213.192.2.99 -p 40110 -i ~/.ssh/id_ed25519   # or: remote <ssh-config alias>
 ```
 
-The `remote` function clones your dotfiles on the remote, runs `setup-remote.sh` (installs zsh, tmux, neovim, claude-code, etc.), then drops you into a tmux session. You pick a project and optionally a worktree branch — the same session/worktree workflow works identically on the remote.
+The `remote` function writes an ssh-config alias (`remote-<port>`) if you gave it `user@host`, copies your SSH key and Claude Code credentials, clones your dotfiles on the remote, runs `setup-remote.sh` + `install.sh`, and finally `herdr machine add`. The machine then appears in the local herdr sidebar: its workspaces and agents sit next to your local ones, with the same keybindings and the same worktree workflow. Remotes run stock herdr, so the two patched features below are local-only.
 
-Press `F12` to toggle local tmux off so your `Ctrl+Space` prefix passes through to the remote tmux session. Press `F12` again to re-enable local tmux.
+### Patched herdr
+
+The local build carries two small patches on top of upstream (`herdr/herdr.patch`): an `index` sidebar token that numbers workspaces/agents across machines, and a `keys.navigate_workspace_select` binding so `l` opens a workspace in the picker. Stock herdr ignores both config keys with a diagnostic, so the config still loads without the patch.
+
+```bash
+./herdr/build.sh         # clone herdr to ~/Projects/cloned_repos/herdr, apply the patch, cargo build, link ~/.local/bin/herdr
+./herdr/build.sh patch   # after editing the clone: regenerate herdr.patch (diff against the base commit in build.sh)
+herdr server live-handoff --import-exe ~/.local/bin/herdr   # swap the running server to the new binary without losing panes
+```
+
+Needs a Rust toolchain. Bump `base` in `build.sh` to move to a newer upstream commit.
 
 ### Claude Code
 
@@ -137,7 +149,7 @@ Secrets are age-encrypted in the repo and decrypted on install using your SSH ke
 
 ## Kinesis Advantage360 Pro
 
-`kinesis/` holds the ZMK keymap (stock Kinesis layout plus: macro 1 = F12 for the tmux toggle, macro 3/4 = Cmd+C/Cmd+V, backlight idle timeout 5 min). Build with Docker running:
+`kinesis/` holds the ZMK keymap (stock Kinesis layout plus: macro 1 = F12, macro 3/4 = Cmd+C/Cmd+V, backlight idle timeout 5 min). Build with Docker running:
 
 ```bash
 cd kinesis && make        # produces firmware/left.uf2 and firmware/right.uf2
