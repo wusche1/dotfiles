@@ -131,7 +131,7 @@ The `remote` function writes an ssh-config alias (`remote-<port>`) if you gave i
 
 ### Patched herdr
 
-The local build carries two small patches on top of upstream (`herdr/herdr.patch`): an `index` sidebar token that numbers workspaces/agents across machines, and a `keys.navigate_workspace_select` binding so `l` opens a workspace in the picker. Stock herdr ignores both config keys with a diagnostic, so the config still loads without the patch.
+The local build carries three small patches on top of upstream (`herdr/herdr.patch`): an `index` sidebar token that numbers workspaces/agents across machines, a `keys.navigate_workspace_select` binding so `l` opens a workspace in the picker, and a "Close tab?" confirmation for every tab close (upstream only asks for the last tab). Stock herdr ignores the two config keys with a diagnostic, so the config still loads without the patch.
 
 ```bash
 ./herdr/build.sh         # clone herdr to ~/Projects/cloned_repos/herdr, apply the patch, cargo build, link ~/.local/bin/herdr

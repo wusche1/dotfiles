@@ -271,6 +271,72 @@ index 0e14e18c..e9eb2a9f 100644
              }
              KeybindMatch::Action(KeybindAction::SwitchTab(index)) => self
                  .snapshot
+diff --git a/src/client/shell/overlay_input.rs b/src/client/shell/overlay_input.rs
+index 10bd4a45..0466076f 100644
+--- a/src/client/shell/overlay_input.rs
++++ b/src/client/shell/overlay_input.rs
+@@ -990,12 +990,9 @@ impl ClientShellState {
+     pub(super) fn request_tab_close(&mut self, tab_id: String, outcome: &mut ClientShellInput) {
+         let workspace_id = self.snapshot.as_deref().and_then(|snapshot| {
+             let target = snapshot.tabs.iter().find(|tab| tab.tab_id == tab_id)?;
+-            (self.config.confirm_close
+-                && !snapshot
+-                    .tabs
+-                    .iter()
+-                    .any(|tab| tab.workspace_id == target.workspace_id && tab.tab_id != tab_id))
+-            .then(|| target.workspace_id.clone())
++            self.config
++                .confirm_close
++                .then(|| target.workspace_id.clone())
+         });
+         if let Some(workspace_id) = workspace_id {
+             if self.open_close_confirmation(workspace_id, Some(tab_id.clone())) {
+@@ -1076,6 +1073,45 @@ impl ClientShellState {
+             })
+             .unwrap_or_else(|| vec![workspace]);
+         let closes_group = group.len() > 1;
++        let other_tab = tab_id.as_deref().and_then(|tab_id| {
++            snapshot
++                .tabs
++                .iter()
++                .find(|tab| tab.tab_id == tab_id)
++                .filter(|target| {
++                    snapshot.tabs.iter().any(|tab| {
++                        tab.workspace_id == target.workspace_id && tab.tab_id != target.tab_id
++                    })
++                })
++        });
++        if let Some(tab) = other_tab {
++            let Some(workspace) = self.navigation_target(&self.active_endpoint_id, &workspace_id)
++            else {
++                return false;
++            };
++            let pane_count = snapshot
++                .panes
++                .iter()
++                .filter(|pane| pane.tab_id == tab.tab_id)
++                .count();
++            let panes = if pane_count == 1 {
++                "1 pane".to_owned()
++            } else {
++                format!("{pane_count} panes")
++            };
++            self.overlay = Some(ClientShellOverlay::ConfirmClose(
++                ClientConfirmCloseOverlay {
++                    workspace_id,
++                    tab_target: Some(ClientTabCloseConfirmation {
++                        tab_id: tab.tab_id.clone(),
++                        workspace,
++                    }),
++                    title: "Close tab?".to_owned(),
++                    detail: format!("{} — {panes}", tab.label),
++                },
++            ));
++            return true;
++        }
+         // Keep parent-group tab closes on the existing server confirmation path.
+         if tab_id.is_some() && closes_group {
+             return false;
 diff --git a/src/client/shell/sidebar.rs b/src/client/shell/sidebar.rs
 index f94f6bdc..57da12dc 100644
 --- a/src/client/shell/sidebar.rs
@@ -324,6 +390,43 @@ index f94f6bdc..57da12dc 100644
              workspace: label,
              branch: workspace.branch.as_deref(),
              state_text: status_text(status),
+diff --git a/src/client/shell/tests/close_tab.rs b/src/client/shell/tests/close_tab.rs
+index d5e897a3..d4f47eb2 100644
+--- a/src/client/shell/tests/close_tab.rs
++++ b/src/client/shell/tests/close_tab.rs
+@@ -113,16 +113,29 @@ fn last_tab_close_confirmation_can_be_cancelled() {
+ }
+ 
+ #[test]
+-fn tab_close_stays_immediate_with_confirmation_disabled_or_other_tabs() {
+-    for (confirm, tabs) in [(false, 1), (false, 2), (true, 2)] {
++fn tab_close_stays_immediate_with_confirmation_disabled() {
++    for tabs in [1, 2] {
+         for menu in [false, true] {
+-            let mut state = close_state(confirm, tabs);
++            let mut state = close_state(false, tabs);
+             assert_tab_close(&request_close(&mut state, menu));
+             assert!(state.overlay.is_none());
+         }
+     }
+ }
+ 
++#[test]
++fn other_tab_close_confirms_with_tab_scope() {
++    for menu in [false, true] {
++        let mut state = close_state(true, 2);
++        assert_no_close(&request_close(&mut state, menu));
++        let Some(ClientShellOverlay::ConfirmClose(confirm)) = state.overlay.as_ref() else {
++            panic!("expected close confirmation");
++        };
++        assert_eq!(confirm.title, "Close tab?");
++        assert_eq!(confirm.tab_target.as_ref().map(|t| t.tab_id.as_str()), Some("tab_1"));
++    }
++}
++
+ #[test]
+ fn last_tab_confirmation_preserves_target_across_focus_changes_and_new_tabs() {
+     let mut state = close_state(true, 1);
 diff --git a/src/client/shell/tests/endpoints.rs b/src/client/shell/tests/endpoints.rs
 index f327f8c1..5e93b62c 100644
 --- a/src/client/shell/tests/endpoints.rs
