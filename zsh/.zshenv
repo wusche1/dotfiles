@@ -4,10 +4,6 @@
 # Homebrew (macOS only)
 [[ -x /opt/homebrew/bin/brew ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# Secrets
-[ -f ~/.secrets/personal.env ] && source ~/.secrets/personal.env
-export CLAUDE_ENV_FILE=~/.secrets/claude.env
-
 export EDITOR=nvim
 export VISUAL=nvim
 

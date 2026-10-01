@@ -18,7 +18,6 @@ switch_workspace = "prefix+shift+1..9"
 focus_agent = "prefix+ctrl+1..9"
 navigate_workspace_up = "k"
 navigate_workspace_down = "j"
-navigate_workspace_select = ["enter", "l"]
 navigate_pane_left = "ctrl+h"
 navigate_pane_down = "ctrl+j"
 navigate_pane_up = "ctrl+k"
@@ -42,7 +41,7 @@ description = "new worktree in tab"
 height = 3
 
 [ui.sidebar.spaces]
-rows = [["state_icon", "workspace"], ["index", "branch", "git_status"]]
+rows = [["state_icon", "workspace"], ["branch", "git_status"]]
 
 [ui.sidebar.agents]
-rows = [["state_icon", "machine", "workspace", "tab"], ["index", "agent"]]
+rows = [["state_icon", "machine", "workspace", "tab"], ["agent"]]

@@ -1,15 +1,6 @@
 #!/bin/bash
 echo '=== Checking environment ==='
 
-# age (for secrets decryption)
-command -v age > /dev/null || {
-    echo 'Installing age...'
-    curl -Lo /tmp/age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
-    tar xf /tmp/age.tar.gz -C /tmp
-    mv /tmp/age/age /tmp/age/age-keygen /usr/local/bin/
-    rm -rf /tmp/age /tmp/age.tar.gz
-}
-
 # git (need 2.31+ for diffview.nvim)
 if ! git --version 2>/dev/null | grep -qE 'git version (2\.(3[1-9]|[4-9][0-9])|[3-9]\.)'; then
     echo 'Upgrading git...'
@@ -68,9 +59,6 @@ command -v claude > /dev/null || {
     echo 'Installing Claude Code...'
     curl -fsSL https://claude.ai/install.sh | bash
 }
-
-# Skip Claude Code onboarding wizard (login handled by credentials copied from local Keychain)
-node -e 'const fs=require("fs"),p=process.env.HOME+"/.claude.json";const j=fs.existsSync(p)?JSON.parse(fs.readFileSync(p)):{};j.hasCompletedOnboarding=true;fs.writeFileSync(p,JSON.stringify(j))'
 
 # Register clipboard MCP server (script lands in ~/.claude via install.sh symlink)
 grep -q clipboard-mcp ~/.claude.json 2>/dev/null || claude mcp add --scope user clipboard -- uv run "$HOME/.claude/clipboard-mcp.py"
