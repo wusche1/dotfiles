@@ -11,13 +11,14 @@ new_workspace = "prefix+alt+s"
 close_workspace = "prefix+shift+x"
 rename_workspace = "prefix+shift+e"
 close_tab = "prefix+alt+x"
-new_worktree = "prefix+shift+w"
+new_worktree = ""
 next_agent = "prefix+a"
 previous_agent = "prefix+shift+a"
 switch_workspace = "prefix+shift+1..9"
 focus_agent = "prefix+ctrl+1..9"
 navigate_workspace_up = "k"
 navigate_workspace_down = "j"
+navigate_workspace_select = ["enter", "l"]
 navigate_pane_left = "ctrl+h"
 navigate_pane_down = "ctrl+j"
 navigate_pane_up = "ctrl+k"
@@ -32,6 +33,13 @@ key = "prefix+shift+s"
 type = "plugin_action"
 command = "julian.new-workspace.create"
 description = "new workspace in projects dir"
+
+[[keys.command]]
+key = "prefix+shift+w"
+type = "popup"
+command = "~/.local/bin/herdr-worktree"
+description = "new worktree in tab"
+height = 3
 
 [ui.sidebar.spaces]
 rows = [["state_icon", "workspace"], ["index", "branch", "git_status"]]

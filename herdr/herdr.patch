@@ -1,0 +1,708 @@
+diff --git a/docs/next/website/src/content/docs/configuration.mdx b/docs/next/website/src/content/docs/configuration.mdx
+index 3dae7168..936250cc 100644
+--- a/docs/next/website/src/content/docs/configuration.mdx
++++ b/docs/next/website/src/content/docs/configuration.mdx
+@@ -372,6 +372,7 @@ Agent rows accept these built-in tokens:
+ 
+ - `state_icon` — colored icon for the agent's semantic state.
+ - `state_text` — `idle`, `working`, `blocked`, `done`, or `unknown`, including a reported display label when present.
++- `index` — the agent's 1-based position in the agent list, matching `focus_agent`.
+ - `machine` — machine label when the client has multiple machines; omitted for a single local machine.
+ - `workspace` — workspace name.
+ - `tab` — tab name when available.
+@@ -385,6 +386,7 @@ Space rows accept these built-in tokens:
+ 
+ - `state_icon` — colored icon for the space's rolled-up agent state.
+ - `state_text` — text for the rolled-up agent state.
++- `index` — the workspace's 1-based position in the sidebar, matching `switch_workspace`.
+ - `workspace` — workspace name.
+ - `branch` — Git branch when available.
+ - `git_status` — Git ahead and behind counts when nonzero.
+diff --git a/src/client/shell/agent_sidebar.rs b/src/client/shell/agent_sidebar.rs
+index e43ab8cc..488f708a 100644
+--- a/src/client/shell/agent_sidebar.rs
++++ b/src/client/shell/agent_sidebar.rs
+@@ -241,7 +241,8 @@ pub(super) fn agent_rows(
+ ) -> Vec<AgentRow> {
+     ordered_agent_pane_ids(snapshot, config.agent_panel_sort)
+         .into_iter()
+-        .filter_map(|pane_id| agent_row(snapshot, &pane_id, config, machine))
++        .enumerate()
++        .filter_map(|(index, pane_id)| agent_row(snapshot, &pane_id, config, machine, Some(index)))
+         .collect()
+ }
+ 
+@@ -250,6 +251,7 @@ pub(super) fn agent_row(
+     pane_id: &str,
+     config: &ClientShellConfig,
+     machine: Option<&str>,
++    index: Option<usize>,
+ ) -> Option<AgentRow> {
+     let agent = snapshot
+         .agents
+@@ -295,6 +297,7 @@ pub(super) fn agent_row(
+     let rows = crate::ui::sidebar_agent_rows(
+         &config.agents,
+         crate::ui::AgentTokenContext {
++            index,
+             machine,
+             workspace: &workspace.label,
+             tab: tab_label,
+diff --git a/src/client/shell/aggregate_navigation.rs b/src/client/shell/aggregate_navigation.rs
+index 67753e8e..603d3948 100644
+--- a/src/client/shell/aggregate_navigation.rs
++++ b/src/client/shell/aggregate_navigation.rs
+@@ -483,3 +483,26 @@ pub(super) fn selected_navigator_target(
+ ) -> Option<ClientNavigatorTarget> {
+     navigator_selected_index(rows, navigator).map(|index| rows[index].target.clone())
+ }
++
++pub(super) fn online_workspace_targets<'a>(
++    endpoints: &'a [ClientShellEndpoint],
++    collapsed_groups: impl Fn(&ClientEndpointId) -> Option<&'a HashSet<String>>,
++) -> Vec<(ClientEndpointId, String)> {
++    let empty = HashSet::new();
++    let mut targets = Vec::new();
++    for endpoint in endpoints
++        .iter()
++        .filter(|endpoint| endpoint.status == ClientEndpointStatus::Online)
++    {
++        let Some(snapshot) = endpoint.snapshot.as_deref() else {
++            continue;
++        };
++        let groups = collapsed_groups(&endpoint.endpoint_id).unwrap_or(&empty);
++        for entry in render::workspace_entries(snapshot, groups) {
++            if let Some(workspace) = snapshot.workspaces.get(entry.index) {
++                targets.push((endpoint.endpoint_id.clone(), workspace.workspace_id.clone()));
++            }
++        }
++    }
++    targets
++}
+diff --git a/src/client/shell/endpoint_agents.rs b/src/client/shell/endpoint_agents.rs
+index b56b41fa..0b057fa9 100644
+--- a/src/client/shell/endpoint_agents.rs
++++ b/src/client/shell/endpoint_agents.rs
+@@ -134,6 +134,11 @@ fn agent_rows(
+     active_endpoint_id: &ClientEndpointId,
+     config: &ClientShellConfig,
+ ) -> Vec<EndpointAgentRow> {
++    let targets = super::aggregate_navigation::online_agent_targets(
++        endpoints,
++        active_endpoint_id,
++        config.agent_panel_sort,
++    );
+     let mut rendered_rows = endpoints
+         .iter()
+         .filter_map(|endpoint| {
+@@ -147,6 +152,10 @@ fn agent_rows(
+                             &agent.pane_id,
+                             config,
+                             Some(&endpoint.label),
++                            targets.iter().position(|target| {
++                                target.endpoint_id == endpoint.endpoint_id
++                                    && target.pane_id == agent.pane_id
++                            }),
+                         )
+                     })
+                     .map(|agent| ((endpoint.endpoint_id.clone(), agent.pane_id.clone()), agent))
+diff --git a/src/client/shell/endpoint_navigation.rs b/src/client/shell/endpoint_navigation.rs
+index a1f7ac2c..446e98ad 100644
+--- a/src/client/shell/endpoint_navigation.rs
++++ b/src/client/shell/endpoint_navigation.rs
+@@ -111,31 +111,11 @@ impl ClientShellState {
+         }
+         if matches!(
+             action,
+-            KeybindAction::PreviousWorkspace | KeybindAction::NextWorkspace
++            KeybindAction::PreviousWorkspace
++                | KeybindAction::NextWorkspace
++                | KeybindAction::SwitchWorkspace(_)
+         ) {
+-            let workspaces = self
+-                .endpoints
+-                .iter()
+-                .filter(|endpoint| endpoint.status == ClientEndpointStatus::Online)
+-                .flat_map(|endpoint| {
+-                    endpoint
+-                        .snapshot
+-                        .as_deref()
+-                        .map_or_else(Vec::new, |snapshot| {
+-                            render::workspace_entries(snapshot, &HashSet::new())
+-                                .into_iter()
+-                                .filter_map(|entry| {
+-                                    snapshot.workspaces.get(entry.index).map(|workspace| {
+-                                        (
+-                                            endpoint.endpoint_id.clone(),
+-                                            workspace.workspace_id.clone(),
+-                                        )
+-                                    })
+-                                })
+-                                .collect()
+-                        })
+-                })
+-                .collect::<Vec<_>>();
++            let workspaces = self.aggregate_workspace_targets();
+             if workspaces.is_empty() {
+                 return true;
+             }
+@@ -147,6 +127,12 @@ impl ClientShellState {
+                 endpoint_id == &self.active_endpoint_id && Some(workspace_id.as_str()) == focused
+             });
+             let next = match (current, action) {
++                (_, KeybindAction::SwitchWorkspace(index)) => {
++                    if index >= workspaces.len() {
++                        return true;
++                    }
++                    index
++                }
+                 (Some(index), KeybindAction::PreviousWorkspace) => {
+                     (index + workspaces.len() - 1) % workspaces.len()
+                 }
+@@ -225,6 +211,12 @@ impl ClientShellState {
+         false
+     }
+ 
++    pub(super) fn aggregate_workspace_targets(&self) -> Vec<(ClientEndpointId, String)> {
++        super::aggregate_navigation::online_workspace_targets(&self.endpoints, |endpoint_id| {
++            self.collapsed_groups_for_endpoint(endpoint_id)
++        })
++    }
++
+     pub(super) fn activate_endpoint(
+         &mut self,
+         endpoint_id: ClientEndpointId,
+diff --git a/src/client/shell/endpoint_sidebar.rs b/src/client/shell/endpoint_sidebar.rs
+index 96982487..08cf932e 100644
+--- a/src/client/shell/endpoint_sidebar.rs
++++ b/src/client/shell/endpoint_sidebar.rs
+@@ -265,6 +265,17 @@ pub(super) fn render_expanded(
+     );
+ 
+     let empty_collapsed_groups = HashSet::new();
++    let workspace_targets =
++        super::aggregate_navigation::online_workspace_targets(state.endpoints, |endpoint_id| {
++            collapsed_groups_for_endpoint(state, endpoint_id)
++        });
++    let workspace_index = |endpoint_id: &ClientEndpointId, workspace_id: &str| {
++        workspace_targets
++            .iter()
++            .position(|(target_endpoint, target_workspace)| {
++                target_endpoint == endpoint_id && target_workspace == workspace_id
++            })
++    };
+ 
+     enum Row {
+         Endpoint(usize),
+@@ -323,6 +334,7 @@ pub(super) fn render_expanded(
+                                     collapsed_groups,
+                                 ),
+                                 entry.indented,
++                                workspace_index(&endpoint.endpoint_id, &workspace.workspace_id),
+                                 &config.spaces,
+                             )
+                             .len()
+@@ -451,6 +463,7 @@ pub(super) fn render_expanded(
+                     workspace,
+                     status,
+                     entry.indented,
++                    workspace_index(&endpoint.endpoint_id, &workspace.workspace_id),
+                     &config.spaces,
+                 );
+                 let height = (tokens.len().max(1).min(u16::MAX as usize) as u16).min(body.height);
+diff --git a/src/client/shell/input.rs b/src/client/shell/input.rs
+index 0e14e18c..e9eb2a9f 100644
+--- a/src/client/shell/input.rs
++++ b/src/client/shell/input.rs
+@@ -683,11 +683,18 @@ impl ClientShellState {
+             return;
+         }
+ 
+-        let (code, modifiers) = crate::config::normalize_key_combo((key.code, key.modifiers));
+-        if code == KeyCode::Enter && modifiers.is_empty() {
++        if self
++            .config
++            .keybinds
++            .keybinds
++            .navigate
++            .workspace_select
++            .matches_direct_key(key)
++        {
+             self.accept_navigate_workspace(outcome);
+             return;
+         }
++        let (code, modifiers) = crate::config::normalize_key_combo((key.code, key.modifiers));
+         if self.workspace_preview_action_blocked() {
+             self.push_endpoint_notice(
+                 ClientEndpointNoticeKind::Rejected,
+@@ -705,11 +712,9 @@ impl ClientShellState {
+                 (KeyCode::Char(digit), KeyModifiers::empty()),
+             )
+         }) {
+-            let valid = self.snapshot.as_deref().is_some_and(|snapshot| {
+-                self.navigation_workspace_entries(snapshot)
+-                    .get(index)
+-                    .is_some()
+-            });
++            let valid = self.indexed_navigation_target_exists(&KeybindMatch::Action(
++                KeybindAction::SwitchWorkspace(index),
++            ));
+             if valid {
+                 self.mode = ClientShellMode::Terminal;
+                 self.navigate_workspace_id = None;
+@@ -859,11 +864,15 @@ impl ClientShellState {
+ 
+         match binding {
+             KeybindMatch::Action(KeybindAction::SwitchWorkspace(index)) => {
+-                self.snapshot.as_deref().is_some_and(|snapshot| {
+-                    self.navigation_workspace_entries(snapshot)
+-                        .get(*index)
+-                        .is_some()
+-                })
++                if self.multi_endpoint_active() {
++                    self.aggregate_workspace_targets().get(*index).is_some()
++                } else {
++                    self.snapshot.as_deref().is_some_and(|snapshot| {
++                        self.navigation_workspace_entries(snapshot)
++                            .get(*index)
++                            .is_some()
++                    })
++                }
+             }
+             KeybindMatch::Action(KeybindAction::SwitchTab(index)) => self
+                 .snapshot
+diff --git a/src/client/shell/sidebar.rs b/src/client/shell/sidebar.rs
+index f94f6bdc..57da12dc 100644
+--- a/src/client/shell/sidebar.rs
++++ b/src/client/shell/sidebar.rs
+@@ -238,7 +238,8 @@ pub(crate) fn render_sidebar(
+     hits.workspace_body = body;
+     let row_heights = entries
+         .iter()
+-        .map(|entry| {
++        .enumerate()
++        .map(|(position, entry)| {
+             snapshot
+                 .workspaces
+                 .get(entry.index)
+@@ -247,6 +248,7 @@ pub(crate) fn render_sidebar(
+                         workspace,
+                         displayed_workspace_status(snapshot, workspace, state.collapsed_groups),
+                         entry.indented,
++                        Some(position),
+                         &config.spaces,
+                     )
+                     .len()
+@@ -304,7 +306,13 @@ pub(crate) fn render_sidebar(
+             continue;
+         };
+         let status = displayed_workspace_status(snapshot, workspace, state.collapsed_groups);
+-        let rows = workspace_rows(workspace, status, entry.indented, &config.spaces);
++        let rows = workspace_rows(
++            workspace,
++            status,
++            entry.indented,
++            Some(entry_position),
++            &config.spaces,
++        );
+         let row_height = (rows.len().max(1).min(u16::MAX as usize) as u16).min(body.height);
+         if y.saturating_add(row_height) > body.bottom() {
+             break;
+@@ -627,6 +635,7 @@ pub(in crate::client::shell) fn workspace_rows(
+     workspace: &ClientShellWorkspace,
+     status: crate::api::schema::AgentStatus,
+     indented: bool,
++    index: Option<usize>,
+     config: &SpacesSidebarConfig,
+ ) -> Vec<Vec<crate::ui::ResolvedToken>> {
+     let label = if indented && !workspace.custom_label {
+@@ -642,6 +651,7 @@ pub(in crate::client::shell) fn workspace_rows(
+     crate::ui::sidebar_space_rows(
+         config,
+         crate::ui::SpaceTokenContext {
++            index,
+             workspace: label,
+             branch: workspace.branch.as_deref(),
+             state_text: status_text(status),
+diff --git a/src/client/shell/tests/endpoints.rs b/src/client/shell/tests/endpoints.rs
+index f327f8c1..5e93b62c 100644
+--- a/src/client/shell/tests/endpoints.rs
++++ b/src/client/shell/tests/endpoints.rs
+@@ -685,8 +685,15 @@ fn saved_machine_preserves_endpoint_scoped_worktree_collapses() {
+         .compose(100, 28)
+         .expect("active remote worktree group");
+     let mut switch = ClientShellInput::default();
++    let remote_child_index = state
++        .aggregate_workspace_targets()
++        .iter()
++        .position(|(endpoint, workspace)| endpoint == &remote_id && workspace == "remote_ws_2")
++        .expect("remote child in aggregate order");
+     state.record_binding(
+-        crate::input::KeybindMatch::Action(crate::input::KeybindAction::SwitchWorkspace(1)),
++        crate::input::KeybindMatch::Action(crate::input::KeybindAction::SwitchWorkspace(
++            remote_child_index,
++        )),
+         &mut switch,
+     );
+     assert!(matches!(
+@@ -2463,6 +2470,82 @@ fn focus_agent_index_uses_online_aggregate_rows() {
+     assert!(!state.indexed_navigation_target_exists(&focus_agent(0)));
+ }
+ 
++#[test]
++fn switch_workspace_index_spans_online_endpoints() {
++    let (mut state, endpoint_id) = state_with_remote();
++    let targets = state.aggregate_workspace_targets();
++    let index = targets
++        .iter()
++        .position(|(endpoint, _)| endpoint == &endpoint_id)
++        .expect("remote workspace in aggregate order");
++    assert!(index > 0, "local workspaces come first");
++    let switch = |index| {
++        crate::input::KeybindMatch::Action(crate::input::KeybindAction::SwitchWorkspace(index))
++    };
++
++    assert!(state.indexed_navigation_target_exists(&switch(0)));
++    assert!(state.indexed_navigation_target_exists(&switch(index)));
++    assert!(!state.indexed_navigation_target_exists(&switch(targets.len())));
++
++    let mut outcome = ClientShellInput::default();
++    state.record_binding(switch(index), &mut outcome);
++    assert!(matches!(
++        &outcome.actions[..],
++        [ClientShellAction::ActivateEndpoint {
++            endpoint_id: target,
++            target: Some(ClientEndpointFocusTarget::Workspace(workspace_id)),
++        }] if target == &endpoint_id && workspace_id == &targets[index].1
++    ));
++
++    let mut outcome = ClientShellInput::default();
++    state.record_binding(switch(targets.len()), &mut outcome);
++    assert!(outcome.actions.is_empty());
++
++    state.set_endpoint_status(&endpoint_id, ClientEndpointStatus::Reconnecting);
++    assert!(!state.indexed_navigation_target_exists(&switch(index)));
++}
++
++#[test]
++fn sidebar_index_tokens_match_aggregate_positions() {
++    let (mut state, endpoint_id) = state_with_remote();
++    let mut config = Config::default();
++    config.ui.sidebar.spaces.rows = vec![vec![
++        crate::config::SpaceSidebarToken::Index,
++        crate::config::SpaceSidebarToken::Workspace,
++    ]];
++    config.ui.sidebar.agents.rows = vec![vec![
++        crate::config::AgentSidebarToken::Index,
++        crate::config::AgentSidebarToken::Agent,
++    ]];
++    state.config = ClientShellConfig::from_config(&config);
++    let frame = state.compose(100, 40).expect("aggregate sidebar");
++    let buffer = frame.to_ratatui_buffer().expect("frame should reconstruct");
++    let row_text = |rect: Rect| {
++        (rect.x..rect.right())
++            .map(|x| buffer[(x, rect.y)].symbol().to_string())
++            .collect::<String>()
++    };
++    let targets = state.aggregate_workspace_targets();
++    for (position, (endpoint, workspace_id)) in targets.iter().enumerate() {
++        let hit = state
++            .hits
++            .workspaces
++            .iter()
++            .find(|hit| &hit.endpoint_id == endpoint && &hit.workspace_id == workspace_id)
++            .expect("workspace row");
++        assert!(
++            row_text(hit.rect).contains(&format!("{} ", position + 1)),
++            "workspace {workspace_id} on {endpoint:?} shows index {}",
++            position + 1
++        );
++    }
++    let remote_workspace = targets
++        .iter()
++        .position(|(endpoint, _)| endpoint == &endpoint_id)
++        .expect("remote workspace");
++    assert_eq!(remote_workspace, targets.len() - 1);
++}
++
+ #[test]
+ fn workspace_drag_rejects_foreign_endpoint_slots() {
+     let (mut state, endpoint_id) = state_with_remote();
+diff --git a/src/config/keybinds.rs b/src/config/keybinds.rs
+index 5f4b46de..d1afc87a 100644
+--- a/src/config/keybinds.rs
++++ b/src/config/keybinds.rs
+@@ -308,6 +308,7 @@ pub struct CustomCommandKeybind {
+ pub struct NavigateKeybinds {
+     pub workspace_up: ActionKeybinds,
+     pub workspace_down: ActionKeybinds,
++    pub workspace_select: ActionKeybinds,
+     pub pane_left: ActionKeybinds,
+     pub pane_down: ActionKeybinds,
+     pub pane_up: ActionKeybinds,
+@@ -482,6 +483,7 @@ impl Config {
+             navigate: NavigateKeybinds {
+                 workspace_up: empty_action!(),
+                 workspace_down: empty_action!(),
++                workspace_select: empty_action!(),
+                 pane_left: empty_action!(),
+                 pane_down: empty_action!(),
+                 pane_up: empty_action!(),
+@@ -612,6 +614,11 @@ impl Config {
+                 navigate_workspace_down,
+                 source
+             );
++            apply_navigate!(
++                keybinds.navigate.workspace_select,
++                navigate_workspace_select,
++                source
++            );
+             apply_navigate!(keybinds.navigate.pane_left, navigate_pane_left, source);
+             apply_navigate!(keybinds.navigate.pane_down, navigate_pane_down, source);
+             apply_navigate!(keybinds.navigate.pane_up, navigate_pane_up, source);
+diff --git a/src/config/model.rs b/src/config/model.rs
+index ce59eb2e..9584748d 100644
+--- a/src/config/model.rs
++++ b/src/config/model.rs
+@@ -360,6 +360,8 @@ pub struct KeysConfig {
+     pub navigate_workspace_up: BindingConfig,
+     /// Move workspace selection down in navigate mode. Default: "down".
+     pub navigate_workspace_down: BindingConfig,
++    /// Open the selected workspace in navigate mode. Default: "enter".
++    pub navigate_workspace_select: BindingConfig,
+     /// Focus the pane to the left in navigate mode. Default: "h". Left arrow is always an alias.
+     pub navigate_pane_left: BindingConfig,
+     /// Focus the pane below in navigate mode. Default: "j".
+@@ -493,6 +495,8 @@ pub(crate) struct KeysConfigOverlay {
+     #[serde(skip_serializing_if = "Option::is_none")]
+     navigate_workspace_down: Option<BindingConfig>,
+     #[serde(skip_serializing_if = "Option::is_none")]
++    navigate_workspace_select: Option<BindingConfig>,
++    #[serde(skip_serializing_if = "Option::is_none")]
+     navigate_pane_left: Option<BindingConfig>,
+     #[serde(skip_serializing_if = "Option::is_none")]
+     navigate_pane_down: Option<BindingConfig>,
+@@ -627,6 +631,7 @@ impl<'de> Deserialize<'de> for KeysConfig {
+         apply_field!(goto);
+         apply_field!(navigate_workspace_up);
+         apply_field!(navigate_workspace_down);
++        apply_field!(navigate_workspace_select);
+         apply_field!(navigate_pane_left);
+         apply_field!(navigate_pane_down);
+         apply_field!(navigate_pane_up);
+@@ -732,6 +737,7 @@ impl KeysConfig {
+         copy_effective_action_field!(goto, keybinds.goto);
+         copy_effective_action_field!(navigate_workspace_up, keybinds.navigate.workspace_up);
+         copy_effective_action_field!(navigate_workspace_down, keybinds.navigate.workspace_down);
++        copy_effective_action_field!(navigate_workspace_select, keybinds.navigate.workspace_select);
+         copy_effective_action_field!(navigate_pane_left, keybinds.navigate.pane_left);
+         copy_effective_action_field!(navigate_pane_down, keybinds.navigate.pane_down);
+         copy_effective_action_field!(navigate_pane_up, keybinds.navigate.pane_up);
+@@ -1101,6 +1107,7 @@ impl Default for KeysConfig {
+             goto: BindingConfig::one("prefix+g"),
+             navigate_workspace_up: BindingConfig::one("up"),
+             navigate_workspace_down: BindingConfig::one("down"),
++            navigate_workspace_select: BindingConfig::one("enter"),
+             navigate_pane_left: BindingConfig::one("h"),
+             navigate_pane_down: BindingConfig::one("j"),
+             navigate_pane_up: BindingConfig::one("k"),
+diff --git a/src/config/sidebar.rs b/src/config/sidebar.rs
+index 9a4cb5e0..032170e7 100644
+--- a/src/config/sidebar.rs
++++ b/src/config/sidebar.rs
+@@ -108,6 +108,7 @@ pub struct SidebarTokenStyle {
+ pub enum AgentSidebarToken {
+     StateIcon,
+     StateText,
++    Index,
+     Machine,
+     Workspace,
+     Tab,
+@@ -127,6 +128,7 @@ pub enum AgentSidebarToken {
+ pub enum SpaceSidebarToken {
+     StateIcon,
+     StateText,
++    Index,
+     Workspace,
+     Branch,
+     GitStatus,
+@@ -272,6 +274,7 @@ fn agent_token_name(token: &AgentSidebarToken) -> String {
+     match token {
+         AgentSidebarToken::StateIcon => "state_icon".into(),
+         AgentSidebarToken::StateText => "state_text".into(),
++        AgentSidebarToken::Index => "index".into(),
+         AgentSidebarToken::Machine => "machine".into(),
+         AgentSidebarToken::Workspace => "workspace".into(),
+         AgentSidebarToken::Tab => "tab".into(),
+@@ -288,6 +291,7 @@ fn space_token_name(token: &SpaceSidebarToken) -> String {
+     match token {
+         SpaceSidebarToken::StateIcon => "state_icon".into(),
+         SpaceSidebarToken::StateText => "state_text".into(),
++        SpaceSidebarToken::Index => "index".into(),
+         SpaceSidebarToken::Workspace => "workspace".into(),
+         SpaceSidebarToken::Branch => "branch".into(),
+         SpaceSidebarToken::GitStatus => "git_status".into(),
+@@ -331,6 +335,7 @@ impl<'de> Deserialize<'de> for AgentSidebarToken {
+             &[
+                 ("state_icon", Self::StateIcon),
+                 ("state_text", Self::StateText),
++                ("index", Self::Index),
+                 ("machine", Self::Machine),
+                 ("workspace", Self::Workspace),
+                 ("tab", Self::Tab),
+@@ -384,6 +389,7 @@ impl<'de> Deserialize<'de> for SpaceSidebarToken {
+             &[
+                 ("state_icon", Self::StateIcon),
+                 ("state_text", Self::StateText),
++                ("index", Self::Index),
+                 ("workspace", Self::Workspace),
+                 ("branch", Self::Branch),
+                 ("git_status", Self::GitStatus),
+diff --git a/src/main.rs b/src/main.rs
+index d5275529..fccd6ba3 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -195,6 +195,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+ # They are independent from focus_pane_*. Do not include prefix+, esc, enter, tab, or 1..9 here.
+ # navigate_workspace_up = "up"
+ # navigate_workspace_down = "down"
++# navigate_workspace_select = "enter"
+ # navigate_pane_left = "h"      # left arrow always focuses the pane to the left
+ # navigate_pane_down = "j"
+ # navigate_pane_up = "k"
+@@ -339,7 +340,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+ # Accepts: hex (#89b4fa), named colors (cyan, blue, magenta), or rgb(r,g,b)
+ # accent = "cyan"
+ 
+-# Expanded agent rows. Built-ins are state_icon, state_text, machine, workspace, tab,
++# Expanded agent rows. Built-ins are state_icon, state_text, index, machine, workspace, tab,
+ # pane, agent, terminal_title, and terminal_title_stripped.
+ # Custom values reported through pane metadata use a $name token.
+ # A token occurrence may be styled with { token = "workspace", fg = "#89b4fa", bold = true, dim = false }.
+@@ -352,7 +353,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+ # [ui.sidebar.agents.rows_by_agent]
+ # claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+ 
+-# Expanded space rows. Built-ins are state_icon, state_text, workspace, branch, and git_status.
++# Expanded space rows. Built-ins are state_icon, state_text, index, workspace, branch, and git_status.
+ # Custom values reported through workspace metadata use a $name token, for example $jj_status.
+ # Inline token styles accept strict #RGB/#RRGGBB foregrounds plus bold and dim booleans.
+ # [ui.sidebar.spaces]
+diff --git a/src/ui/sidebar.rs b/src/ui/sidebar.rs
+index cbf6f1a9..75da526f 100644
+--- a/src/ui/sidebar.rs
++++ b/src/ui/sidebar.rs
+@@ -129,6 +129,7 @@ pub(crate) fn resolved_token_spans(
+         .iter()
+         .map(|token| match &token.kind {
+             ResolvedTokenKind::StateText(text)
++            | ResolvedTokenKind::Index(text)
+             | ResolvedTokenKind::Machine(text)
+             | ResolvedTokenKind::Workspace(text)
+             | ResolvedTokenKind::Tab(text)
+@@ -235,7 +236,8 @@ pub(crate) fn resolved_token_spans(
+                 truncate_end(text, budgets[index]),
+                 apply_token_style(workspace_style, token.style),
+             )),
+-            ResolvedTokenKind::Machine(text)
++            ResolvedTokenKind::Index(text)
++            | ResolvedTokenKind::Machine(text)
+             | ResolvedTokenKind::Tab(text)
+             | ResolvedTokenKind::Pane(text)
+             | ResolvedTokenKind::Agent(text)
+diff --git a/src/ui/sidebar/tokens.rs b/src/ui/sidebar/tokens.rs
+index c1e38aa9..5ee27cdc 100644
+--- a/src/ui/sidebar/tokens.rs
++++ b/src/ui/sidebar/tokens.rs
+@@ -13,6 +13,7 @@ pub(crate) struct ResolvedToken {
+ pub(crate) enum ResolvedTokenKind {
+     StateIcon,
+     StateText(String),
++    Index(String),
+     Machine(String),
+     Workspace(String),
+     Tab(String),
+@@ -28,6 +29,7 @@ impl ResolvedTokenKind {
+     fn text_value(&self) -> Option<&str> {
+         match self {
+             Self::StateText(value)
++            | Self::Index(value)
+             | Self::Machine(value)
+             | Self::Workspace(value)
+             | Self::Tab(value)
+@@ -53,6 +55,7 @@ impl ResolvedToken {
+ }
+ 
+ pub(crate) struct AgentTokenContext<'a> {
++    pub(crate) index: Option<usize>,
+     pub(crate) machine: Option<&'a str>,
+     pub(crate) workspace: &'a str,
+     pub(crate) tab: Option<&'a str>,
+@@ -82,6 +85,9 @@ pub(crate) fn agent_rows(
+                         AgentSidebarToken::StateText => {
+                             Some(ResolvedTokenKind::StateText(state_text.to_string()))
+                         }
++                        AgentSidebarToken::Index => context
++                            .index
++                            .map(|index| ResolvedTokenKind::Index((index + 1).to_string())),
+                         AgentSidebarToken::Machine => context
+                             .machine
+                             .map(|value| ResolvedTokenKind::Machine(value.to_string())),
+@@ -122,6 +128,7 @@ pub(crate) fn agent_rows(
+ }
+ 
+ pub(crate) struct SpaceTokenContext<'a> {
++    pub(crate) index: Option<usize>,
+     pub(crate) workspace: &'a str,
+     pub(crate) branch: Option<&'a str>,
+     pub(crate) state_text: &'a str,
+@@ -147,6 +154,9 @@ pub(crate) fn space_rows(
+                         SpaceSidebarToken::StateText => {
+                             Some(ResolvedTokenKind::StateText(context.state_text.to_string()))
+                         }
++                        SpaceSidebarToken::Index => context
++                            .index
++                            .map(|index| ResolvedTokenKind::Index((index + 1).to_string())),
+                         SpaceSidebarToken::Workspace => {
+                             Some(ResolvedTokenKind::Workspace(context.workspace.to_string()))
+                         }
+@@ -218,6 +228,7 @@ mod tests {
+ 
+     fn context(entry: &Entry) -> AgentTokenContext<'_> {
+         AgentTokenContext {
++            index: None,
+             machine: None,
+             workspace: &entry.workspace,
+             tab: entry.tab.as_deref(),
+@@ -326,6 +337,7 @@ rows = [[{ token = "$load", rules = [{ lt = 50, dim = true }] }]]
+             let spaces = space_rows(
+                 &config.spaces,
+                 SpaceTokenContext {
++                    index: None,
+                     workspace: "repo",
+                     branch: None,
+                     state_text: "working",
+@@ -375,6 +387,7 @@ rows = [[{ token = "$load", rules = [{ lt = 50, hide = true }] }], ["workspace"]
+             let rows = space_rows(
+                 &config.spaces,
+                 SpaceTokenContext {
++                    index: None,
+                     workspace: "repo",
+                     branch: None,
+                     state_text: "working",
+@@ -544,6 +557,7 @@ rows = [[{ token = "$load", rules = [{ lt = 50, hide = true }] }], ["workspace"]
+             space_rows(
+                 &config,
+                 SpaceTokenContext {
++                    index: None,
+                     workspace: "feature",
+                     branch: Some("worktree/feature"),
+                     state_text: "idle",
+@@ -571,6 +585,7 @@ rows = [[{ token = "$load", rules = [{ lt = 50, hide = true }] }], ["workspace"]
+             space_rows(
+                 &config,
+                 SpaceTokenContext {
++                    index: None,
+                     workspace: "repo",
+                     branch: None,
+                     state_text: "idle",
