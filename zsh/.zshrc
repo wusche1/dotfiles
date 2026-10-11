@@ -41,6 +41,7 @@ remote() {
         case "$1" in
             -p) port="$2"; shift 2 ;;
             -i) identity="$2"; shift 2 ;;
+            -L) shift 2 ;;  # ignore port forwards from pasted ssh commands
             ssh) shift ;;  # skip 'ssh' if included
             *) user_host="$1"; shift ;;
         esac
