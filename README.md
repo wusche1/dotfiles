@@ -50,6 +50,10 @@ The prefix is `Ctrl+Space`, then a key; `Ctrl+Space ?` lists everything. The one
 
 The full handout with the mental model (workspace = project, tab = branch, pane = agent vs. your eyes) is `docs/index.html`.
 
+More cheat sheets:
+- Claude Code: https://www.alignment-hive.com/cheatsheet
+- herdr: https://cskwork.github.io/herdr-cheatsheet/
+
 ## What's in here
 
 ```
