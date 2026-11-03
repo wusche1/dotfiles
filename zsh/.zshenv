@@ -16,4 +16,4 @@ eval "$(direnv hook zsh)"
 
 # Environment
 export PATH="$HOME/.local/bin:$PATH"
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
