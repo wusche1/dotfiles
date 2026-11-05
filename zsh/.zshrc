@@ -20,6 +20,7 @@ alias gl="git log --oneline --graph"
 alias cc="claude"
 alias ccdsp="IS_SANDBOX=1 claude --permission-mode bypassPermissions"
 alias ccnight="claude --permission-mode auto --disallowedTools AskUserQuestion"
+alias ccdspnight="IS_SANDBOX=1 claude --permission-mode bypassPermissions --disallowedTools AskUserQuestion EnterPlanMode"
 
 # Navigation
 alias ..="cd .."
