@@ -1,8 +1,8 @@
 diff --git a/docs/next/website/src/content/docs/configuration.mdx b/docs/next/website/src/content/docs/configuration.mdx
-index 3dae7168..936250cc 100644
+index 874fe56c..34e4f5c3 100644
 --- a/docs/next/website/src/content/docs/configuration.mdx
 +++ b/docs/next/website/src/content/docs/configuration.mdx
-@@ -372,6 +372,7 @@ Agent rows accept these built-in tokens:
+@@ -383,6 +383,7 @@ Agent rows accept these built-in tokens:
  
  - `state_icon` — colored icon for the agent's semantic state.
  - `state_text` — `idle`, `working`, `blocked`, `done`, or `unknown`, including a reported display label when present.
@@ -10,7 +10,7 @@ index 3dae7168..936250cc 100644
  - `machine` — machine label when the client has multiple machines; omitted for a single local machine.
  - `workspace` — workspace name.
  - `tab` — tab name when available.
-@@ -385,6 +386,7 @@ Space rows accept these built-in tokens:
+@@ -396,6 +397,7 @@ Space rows accept these built-in tokens:
  
  - `state_icon` — colored icon for the space's rolled-up agent state.
  - `state_text` — text for the rolled-up agent state.
@@ -107,10 +107,10 @@ index b56b41fa..0b057fa9 100644
                      })
                      .map(|agent| ((endpoint.endpoint_id.clone(), agent.pane_id.clone()), agent))
 diff --git a/src/client/shell/endpoint_navigation.rs b/src/client/shell/endpoint_navigation.rs
-index a1f7ac2c..446e98ad 100644
+index f1e268c3..a97fee7a 100644
 --- a/src/client/shell/endpoint_navigation.rs
 +++ b/src/client/shell/endpoint_navigation.rs
-@@ -111,31 +111,11 @@ impl ClientShellState {
+@@ -114,31 +114,11 @@ impl ClientShellState {
          }
          if matches!(
              action,
@@ -146,7 +146,7 @@ index a1f7ac2c..446e98ad 100644
              if workspaces.is_empty() {
                  return true;
              }
-@@ -147,6 +127,12 @@ impl ClientShellState {
+@@ -150,6 +130,12 @@ impl ClientShellState {
                  endpoint_id == &self.active_endpoint_id && Some(workspace_id.as_str()) == focused
              });
              let next = match (current, action) {
@@ -159,7 +159,7 @@ index a1f7ac2c..446e98ad 100644
                  (Some(index), KeybindAction::PreviousWorkspace) => {
                      (index + workspaces.len() - 1) % workspaces.len()
                  }
-@@ -225,6 +211,12 @@ impl ClientShellState {
+@@ -228,6 +214,12 @@ impl ClientShellState {
          false
      }
  
@@ -169,9 +169,9 @@ index a1f7ac2c..446e98ad 100644
 +        })
 +    }
 +
-     pub(super) fn activate_endpoint(
+     /// Selecting a machine that is waiting to reconnect asks for an attempt now.
+     fn select_unready_machine(
          &mut self,
-         endpoint_id: ClientEndpointId,
 diff --git a/src/client/shell/endpoint_sidebar.rs b/src/client/shell/endpoint_sidebar.rs
 index 96982487..08cf932e 100644
 --- a/src/client/shell/endpoint_sidebar.rs
@@ -211,10 +211,10 @@ index 96982487..08cf932e 100644
                  );
                  let height = (tokens.len().max(1).min(u16::MAX as usize) as u16).min(body.height);
 diff --git a/src/client/shell/input.rs b/src/client/shell/input.rs
-index 0e14e18c..e9eb2a9f 100644
+index ee92d590..ea0f886c 100644
 --- a/src/client/shell/input.rs
 +++ b/src/client/shell/input.rs
-@@ -683,11 +683,18 @@ impl ClientShellState {
+@@ -786,11 +786,18 @@ impl ClientShellState {
              return;
          }
  
@@ -233,9 +233,9 @@ index 0e14e18c..e9eb2a9f 100644
          }
 +        let (code, modifiers) = crate::config::normalize_key_combo((key.code, key.modifiers));
          if self.workspace_preview_action_blocked() {
-             self.push_endpoint_notice(
-                 ClientEndpointNoticeKind::Rejected,
-@@ -705,11 +712,9 @@ impl ClientShellState {
+             // Bindings cannot run against a foreign preview, so Ctrl+[ has
+             // nothing to lose to and cancels here the same way Esc does.
+@@ -814,11 +821,9 @@ impl ClientShellState {
                  (KeyCode::Char(digit), KeyModifiers::empty()),
              )
          }) {
@@ -250,7 +250,7 @@ index 0e14e18c..e9eb2a9f 100644
              if valid {
                  self.mode = ClientShellMode::Terminal;
                  self.navigate_workspace_id = None;
-@@ -859,11 +864,15 @@ impl ClientShellState {
+@@ -976,11 +981,15 @@ impl ClientShellState {
  
          match binding {
              KeybindMatch::Action(KeybindAction::SwitchWorkspace(index)) => {
@@ -272,10 +272,10 @@ index 0e14e18c..e9eb2a9f 100644
              KeybindMatch::Action(KeybindAction::SwitchTab(index)) => self
                  .snapshot
 diff --git a/src/client/shell/overlay_input.rs b/src/client/shell/overlay_input.rs
-index 10bd4a45..0466076f 100644
+index d9285fbc..99313979 100644
 --- a/src/client/shell/overlay_input.rs
 +++ b/src/client/shell/overlay_input.rs
-@@ -990,12 +990,9 @@ impl ClientShellState {
+@@ -1064,12 +1064,9 @@ impl ClientShellState {
      pub(super) fn request_tab_close(&mut self, tab_id: String, outcome: &mut ClientShellInput) {
          let workspace_id = self.snapshot.as_deref().and_then(|snapshot| {
              let target = snapshot.tabs.iter().find(|tab| tab.tab_id == tab_id)?;
@@ -290,8 +290,8 @@ index 10bd4a45..0466076f 100644
 +                .then(|| target.workspace_id.clone())
          });
          if let Some(workspace_id) = workspace_id {
-             if self.open_close_confirmation(workspace_id, Some(tab_id.clone())) {
-@@ -1076,6 +1073,45 @@ impl ClientShellState {
+             if self.open_close_confirmation(workspace_id, Some(tab_id.clone()), None) {
+@@ -1172,6 +1169,47 @@ impl ClientShellState {
              })
              .unwrap_or_else(|| vec![workspace]);
          let closes_group = group.len() > 1;
@@ -324,9 +324,11 @@ index 10bd4a45..0466076f 100644
 +            self.overlay = Some(ClientShellOverlay::ConfirmClose(
 +                ClientConfirmCloseOverlay {
 +                    workspace_id,
++                    close_group: false,
 +                    tab_target: Some(ClientTabCloseConfirmation {
 +                        tab_id: tab.tab_id.clone(),
 +                        workspace,
++                        pane_id: None,
 +                    }),
 +                    title: "Close tab?".to_owned(),
 +                    detail: format!("{} — {panes}", tab.label),
@@ -338,7 +340,7 @@ index 10bd4a45..0466076f 100644
          if tab_id.is_some() && closes_group {
              return false;
 diff --git a/src/client/shell/sidebar.rs b/src/client/shell/sidebar.rs
-index f94f6bdc..57da12dc 100644
+index 46c3a1a0..32d4ce56 100644
 --- a/src/client/shell/sidebar.rs
 +++ b/src/client/shell/sidebar.rs
 @@ -238,7 +238,8 @@ pub(crate) fn render_sidebar(
@@ -374,7 +376,7 @@ index f94f6bdc..57da12dc 100644
          let row_height = (rows.len().max(1).min(u16::MAX as usize) as u16).min(body.height);
          if y.saturating_add(row_height) > body.bottom() {
              break;
-@@ -627,6 +635,7 @@ pub(in crate::client::shell) fn workspace_rows(
+@@ -664,6 +672,7 @@ pub(in crate::client::shell) fn workspace_rows(
      workspace: &ClientShellWorkspace,
      status: crate::api::schema::AgentStatus,
      indented: bool,
@@ -382,7 +384,7 @@ index f94f6bdc..57da12dc 100644
      config: &SpacesSidebarConfig,
  ) -> Vec<Vec<crate::ui::ResolvedToken>> {
      let label = if indented && !workspace.custom_label {
-@@ -642,6 +651,7 @@ pub(in crate::client::shell) fn workspace_rows(
+@@ -679,6 +688,7 @@ pub(in crate::client::shell) fn workspace_rows(
      crate::ui::sidebar_space_rows(
          config,
          crate::ui::SpaceTokenContext {
@@ -428,10 +430,10 @@ index d5e897a3..d4f47eb2 100644
  fn last_tab_confirmation_preserves_target_across_focus_changes_and_new_tabs() {
      let mut state = close_state(true, 1);
 diff --git a/src/client/shell/tests/endpoints.rs b/src/client/shell/tests/endpoints.rs
-index f327f8c1..5e93b62c 100644
+index 5d92c453..27054361 100644
 --- a/src/client/shell/tests/endpoints.rs
 +++ b/src/client/shell/tests/endpoints.rs
-@@ -685,8 +685,15 @@ fn saved_machine_preserves_endpoint_scoped_worktree_collapses() {
+@@ -1114,8 +1114,15 @@ fn saved_machine_preserves_endpoint_scoped_worktree_collapses() {
          .compose(100, 28)
          .expect("active remote worktree group");
      let mut switch = ClientShellInput::default();
@@ -448,7 +450,7 @@ index f327f8c1..5e93b62c 100644
          &mut switch,
      );
      assert!(matches!(
-@@ -2463,6 +2470,82 @@ fn focus_agent_index_uses_online_aggregate_rows() {
+@@ -2892,6 +2899,82 @@ fn focus_agent_index_uses_online_aggregate_rows() {
      assert!(!state.indexed_navigation_target_exists(&focus_agent(0)));
  }
  
@@ -532,10 +534,10 @@ index f327f8c1..5e93b62c 100644
  fn workspace_drag_rejects_foreign_endpoint_slots() {
      let (mut state, endpoint_id) = state_with_remote();
 diff --git a/src/config/keybinds.rs b/src/config/keybinds.rs
-index 5f4b46de..d1afc87a 100644
+index 276764a6..e6a1fd06 100644
 --- a/src/config/keybinds.rs
 +++ b/src/config/keybinds.rs
-@@ -308,6 +308,7 @@ pub struct CustomCommandKeybind {
+@@ -341,6 +341,7 @@ pub struct CustomCommandKeybind {
  pub struct NavigateKeybinds {
      pub workspace_up: ActionKeybinds,
      pub workspace_down: ActionKeybinds,
@@ -543,7 +545,7 @@ index 5f4b46de..d1afc87a 100644
      pub pane_left: ActionKeybinds,
      pub pane_down: ActionKeybinds,
      pub pane_up: ActionKeybinds,
-@@ -482,6 +483,7 @@ impl Config {
+@@ -529,6 +530,7 @@ impl Config {
              navigate: NavigateKeybinds {
                  workspace_up: empty_action!(),
                  workspace_down: empty_action!(),
@@ -551,7 +553,7 @@ index 5f4b46de..d1afc87a 100644
                  pane_left: empty_action!(),
                  pane_down: empty_action!(),
                  pane_up: empty_action!(),
-@@ -612,6 +614,11 @@ impl Config {
+@@ -659,6 +661,11 @@ impl Config {
                  navigate_workspace_down,
                  source
              );
@@ -563,11 +565,37 @@ index 5f4b46de..d1afc87a 100644
              apply_navigate!(keybinds.navigate.pane_left, navigate_pane_left, source);
              apply_navigate!(keybinds.navigate.pane_down, navigate_pane_down, source);
              apply_navigate!(keybinds.navigate.pane_up, navigate_pane_up, source);
+@@ -779,7 +786,6 @@ impl Config {
+ fn reserve_navigate_runtime_keys(registry: &mut BindingRegistry) {
+     for combo in [
+         (KeyCode::Esc, KeyModifiers::empty()),
+-        (KeyCode::Enter, KeyModifiers::empty()),
+         (KeyCode::Tab, KeyModifiers::empty()),
+         (KeyCode::BackTab, KeyModifiers::empty()),
+         (KeyCode::Tab, KeyModifiers::SHIFT),
+@@ -2119,7 +2125,7 @@ navigate_pane_down = "ctrl+j"
+         let config: Config = toml::from_str(
+             r#"
+ [keys]
+-navigate_workspace_up = ["esc", "alt+esc", "enter", "1", "tab", "shift+tab", "left", "right"]
++navigate_workspace_up = ["esc", "alt+esc", "1", "tab", "shift+tab", "left", "right"]
+ "#,
+         )
+         .unwrap();
+@@ -2136,7 +2142,7 @@ navigate_workspace_up = ["esc", "alt+esc", "enter", "1", "tab", "shift+tab", "le
+                         && diag.contains("keys.navigate_workspace_up")
+                 })
+                 .count(),
+-            8
++            7
+         );
+     }
+ 
 diff --git a/src/config/model.rs b/src/config/model.rs
-index ce59eb2e..9584748d 100644
+index 29802fd9..379c313e 100644
 --- a/src/config/model.rs
 +++ b/src/config/model.rs
-@@ -360,6 +360,8 @@ pub struct KeysConfig {
+@@ -361,6 +361,8 @@ pub struct KeysConfig {
      pub navigate_workspace_up: BindingConfig,
      /// Move workspace selection down in navigate mode. Default: "down".
      pub navigate_workspace_down: BindingConfig,
@@ -576,7 +604,7 @@ index ce59eb2e..9584748d 100644
      /// Focus the pane to the left in navigate mode. Default: "h". Left arrow is always an alias.
      pub navigate_pane_left: BindingConfig,
      /// Focus the pane below in navigate mode. Default: "j".
-@@ -493,6 +495,8 @@ pub(crate) struct KeysConfigOverlay {
+@@ -499,6 +501,8 @@ pub(crate) struct KeysConfigOverlay {
      #[serde(skip_serializing_if = "Option::is_none")]
      navigate_workspace_down: Option<BindingConfig>,
      #[serde(skip_serializing_if = "Option::is_none")]
@@ -585,7 +613,7 @@ index ce59eb2e..9584748d 100644
      navigate_pane_left: Option<BindingConfig>,
      #[serde(skip_serializing_if = "Option::is_none")]
      navigate_pane_down: Option<BindingConfig>,
-@@ -627,6 +631,7 @@ impl<'de> Deserialize<'de> for KeysConfig {
+@@ -656,6 +660,7 @@ impl<'de> Deserialize<'de> for KeysConfig {
          apply_field!(goto);
          apply_field!(navigate_workspace_up);
          apply_field!(navigate_workspace_down);
@@ -593,7 +621,7 @@ index ce59eb2e..9584748d 100644
          apply_field!(navigate_pane_left);
          apply_field!(navigate_pane_down);
          apply_field!(navigate_pane_up);
-@@ -732,6 +737,7 @@ impl KeysConfig {
+@@ -761,6 +766,7 @@ impl KeysConfig {
          copy_effective_action_field!(goto, keybinds.goto);
          copy_effective_action_field!(navigate_workspace_up, keybinds.navigate.workspace_up);
          copy_effective_action_field!(navigate_workspace_down, keybinds.navigate.workspace_down);
@@ -601,7 +629,7 @@ index ce59eb2e..9584748d 100644
          copy_effective_action_field!(navigate_pane_left, keybinds.navigate.pane_left);
          copy_effective_action_field!(navigate_pane_down, keybinds.navigate.pane_down);
          copy_effective_action_field!(navigate_pane_up, keybinds.navigate.pane_up);
-@@ -1101,6 +1107,7 @@ impl Default for KeysConfig {
+@@ -1133,6 +1139,7 @@ impl Default for KeysConfig {
              goto: BindingConfig::one("prefix+g"),
              navigate_workspace_up: BindingConfig::one("up"),
              navigate_workspace_down: BindingConfig::one("down"),
@@ -662,10 +690,10 @@ index 9a4cb5e0..032170e7 100644
                  ("branch", Self::Branch),
                  ("git_status", Self::GitStatus),
 diff --git a/src/main.rs b/src/main.rs
-index d5275529..fccd6ba3 100644
+index f97e7e2b..1977921f 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -195,6 +195,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+@@ -197,6 +197,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
  # They are independent from focus_pane_*. Do not include prefix+, esc, enter, tab, or 1..9 here.
  # navigate_workspace_up = "up"
  # navigate_workspace_down = "down"
@@ -673,7 +701,7 @@ index d5275529..fccd6ba3 100644
  # navigate_pane_left = "h"      # left arrow always focuses the pane to the left
  # navigate_pane_down = "j"
  # navigate_pane_up = "k"
-@@ -339,7 +340,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+@@ -344,7 +345,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
  # Accepts: hex (#89b4fa), named colors (cyan, blue, magenta), or rgb(r,g,b)
  # accent = "cyan"
  
@@ -682,7 +710,7 @@ index d5275529..fccd6ba3 100644
  # pane, agent, terminal_title, and terminal_title_stripped.
  # Custom values reported through pane metadata use a $name token.
  # A token occurrence may be styled with { token = "workspace", fg = "#89b4fa", bold = true, dim = false }.
-@@ -352,7 +353,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
+@@ -357,7 +358,7 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
  # [ui.sidebar.agents.rows_by_agent]
  # claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
  

@@ -1,14 +1,15 @@
 #!/bin/zsh
 # Prompt for a branch name, create <repo>_worktree/<branch> next to the repo, open it in a new herdr tab.
 # Run from a herdr popup (prefix+shift+w); Escape aborts.
-setopt null_glob
+setopt null_glob err_exit
+root=$(git -C "$HERDR_ACTIVE_PANE_CWD" worktree list --porcelain 2>/dev/null | head -1 | sed 's/^worktree //')
+[ -n "$root" ] || { echo "not a git repo: $HERDR_ACTIVE_PANE_CWD"; read -k; exit 1 }
 bindkey -N p main
 bindkey -M p '\e' send-break
 name=
 vared -M p -p 'branch: ' name
 [ -n "$name" ] || exit
 
-root=$(git -C "$HERDR_ACTIVE_PANE_CWD" worktree list --porcelain | head -1 | sed 's/^worktree //')
 worktree_dir="${root}_worktree"
 mkdir -p "$worktree_dir"
 git -C "$root" worktree add "$worktree_dir/$name" -b "$name"

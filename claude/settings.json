@@ -16,7 +16,7 @@
     "defaultMode": "auto",
     "blockReadsOutsideWorkingDirectories": false
   },
-  "model": "opus",
+  "model": "fable",
   "outputStyle": "Concise",
   "sandbox": {
     "enabled": false

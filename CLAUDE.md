@@ -19,7 +19,7 @@ Inspired by [vossenwout/pookie-dotfiles](https://github.com/vossenwout/pookie-do
 - **Symlink-based install**: `install.sh` creates symlinks, no stow/nix
 - **Remote dev workflow**: `remote user@host|alias` function in `.zshrc` writes an ssh-config alias, copies key + Claude creds, clones dotfiles, runs `setup-remote.sh` + `install.sh`, then `herdr machine add`
 - **`setup-remote.sh`**: Installs zsh, herdr, neovim, uv, direnv, node, claude-code, age on remote Linux machines (assumes apt)
-- **Patched herdr**: `~/.local/bin/herdr` is built from `herdr/herdr.patch` via `herdr/build.sh`; stock herdr (remotes) ignores the extra config keys. After editing the clone, `./herdr/build.sh patch`
+- **Patched herdr**: `~/.local/bin/herdr` is built from `herdr/herdr.patch` via `herdr/build.sh`; it also cross-builds an x86_64 Linux binary that `remote` copies to `~/.local/bin/herdr` on remotes (stock herdr rejects the whole config over the `index` sidebar token). After editing the clone, `./herdr/build.sh patch`. Swap a running remote server in place with `herdr.stock server live-handoff --import-exe ~/.local/bin/herdr`
 - **Secrets**: Age-encrypted, decrypted by `install.sh`. Key lives at `~/.ssh/id_ed25519`
 - **Clipboard**: `claude/clipboard-mcp.py` provides `mcp__clipboard__copy`. Use it whenever you produce text Julian likely wants to copy (paths, snippets, commands, generated content) — it shows its own consent dialog, so call it directly.
 - **GitHub repo**: `wusche1/dotfiles`

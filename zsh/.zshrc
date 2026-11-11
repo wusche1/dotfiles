@@ -75,6 +75,11 @@ remote() {
     echo "$claude_creds" | \
         ssh "${ssh_opts[@]}" "$host" 'mkdir -p ~/.claude && cat > ~/.claude/.credentials.json && chmod 600 ~/.claude/.credentials.json'
 
+    # patched herdr (built by herdr/build.sh); scp to a temp name since the running server keeps the old file busy
+    ssh "${ssh_opts[@]}" "$host" "mkdir -p ~/.local/bin"
+    scp ~/Projects/cloned_repos/herdr/target/x86_64-unknown-linux-gnu/release/herdr "$host:~/.local/bin/herdr.new"
+    ssh "${ssh_opts[@]}" "$host" "mv ~/.local/bin/herdr.new ~/.local/bin/herdr"
+
     echo "Setting up remote environment..."
     local repo=$(git -C ~/dotfiles remote get-url origin)
     ssh "${ssh_opts[@]}" "$host" "
