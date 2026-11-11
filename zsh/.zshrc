@@ -20,7 +20,7 @@ alias gl="git log --oneline --graph"
 alias cc="claude"
 alias ccdsp="IS_SANDBOX=1 claude --permission-mode bypassPermissions"
 alias ccnight="claude --permission-mode auto --disallowedTools AskUserQuestion"
-alias ccdspnight="IS_SANDBOX=1 claude --permission-mode bypassPermissions --disallowedTools AskUserQuestion EnterPlanMode"
+alias ccdspnight="IS_SANDBOX=1 claude --permission-mode bypassPermissions --disallowedTools AskUserQuestion EnterPlanMode --settings '{\"permissions\":{\"denyInsteadOfPrompting\":true}}'"
 
 # Navigation
 alias ..="cd .."
@@ -91,7 +91,7 @@ remote() {
         ~/dotfiles/scripts/setup-remote.sh
         cd ~/dotfiles && ./install.sh
         echo 'Syncing neovim plugins...'
-        nvim --headless '+Lazy! sync' +qa > /dev/null 2>&1
+        nvim --headless '+Lazy! restore' +qa > /dev/null 2>&1
     "
 
     herdr machine add --label "$host" "$host"

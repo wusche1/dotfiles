@@ -17,3 +17,9 @@ eval "$(direnv hook zsh)"
 # Environment
 export PATH="$HOME/.local/bin:$PATH"
 if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
+
+# Remote machines: keep caches off the small root overlay
+if [ -d /workspace ]; then
+    export UV_CACHE_DIR=/workspace/.cache/uv
+    export HF_HOME=/workspace/.cache/huggingface
+fi
