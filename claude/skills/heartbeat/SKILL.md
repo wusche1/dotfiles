@@ -20,7 +20,7 @@ Whenever work can be split off or parallelized, hand it to subagents. Use them e
 
 Check:
 
-- **Jobs:** are all background jobs, scripts and subagents still progressing? Check logs/output timestamps. Kill or restart anything stuck.
+- **Jobs:** are all background jobs, scripts and subagents still progressing? Check logs/output timestamps. Is anything taking longer than expected? Kill or restart anything stuck.
 - **Hardware:** disk space, RAM, GPU memory/utilization, load on every machine you use. Is anything close to full, OOM, or crashing? Act before it fails (a pod at its memory limit can lock up SSH entirely).
 - **Rented hardware & costs:** list all rented instances (Vast, RunPod, ...). Is anything idle or unnecessary? Shut down only what you started; flag others' machines, never touch them.
 - **Budget:** how much time and money is used vs. the budget? Project the rest. If it won't fit, change the plan now, not at the end.
